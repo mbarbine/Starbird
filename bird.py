@@ -83,54 +83,6 @@ class Bird:
         elif self.rect.y >= WINDOW_HEIGHT - BIRD_HEIGHT:
             self.rect.y = WINDOW_HEIGHT - BIRD_HEIGHT
             self.velocity = 0
-    def update(self):
-        # Apply gravity and air resistance
-        self.velocity += self.acceleration
-        self.velocity *= self.air_resistance
-        self.velocity = min(self.velocity, self.max_velocity)
-        self.rect.y += int(self.velocity)
-
-        # Rotate bird based on velocity
-        self.rotation_angle = min(max(-45, self.velocity * 2), 45)
-        rotated_image = pygame.transform.rotate(self.images[int(self.current_frame)], self.rotation_angle)
-        self.image = rotated_image
-
-        # Update animation frame based on velocity
-        self.current_frame += self.animation_speed * (1 + abs(self.velocity) / 10)
-        if self.current_frame >= len(self.images):
-            self.current_frame = 0
-
-        # Flap cooldown management
-        if self.flap_cooldown > 0:
-            self.flap_cooldown -= 1
-
-        # Laser cooldown management
-        if self.laser_cooldown > 0:
-            self.laser_cooldown -= 1
-
-        # Shield duration and pulsing effect
-        if self.shield_active:
-            self.shield_duration -= 1
-            self.pulse_offset += 1  # Increase pulse offset for visual effect
-            if self.shield_duration <= 0:
-                self.shield_active = False
-                self.shield_duration = SHIELD_DURATION
-            if self.pulse_offset > 30:
-                self.pulse_offset = 0  # Reset pulse effect
-
-        # Quantum Superposition and Entanglement Handling
-        if self.superposition_active:
-            self.handle_quantum_superposition()
-        if self.entanglement_linked:
-            self.handle_quantum_entanglement()
-
-        # Keep the bird within the screen bounds
-        if self.rect.y <= 0:
-            self.rect.y = 0
-            self.velocity = max(self.velocity, 0)  # Prevents the bird from sticking to the top
-        elif self.rect.y >= WINDOW_HEIGHT - BIRD_HEIGHT:
-            self.rect.y = WINDOW_HEIGHT - BIRD_HEIGHT
-            self.velocity = 0
 
     def flap(self):
         if self.flap_cooldown == 0:

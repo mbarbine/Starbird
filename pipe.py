@@ -68,7 +68,7 @@ class Pipe:
         self.laser_speed = 10
         self.lasers = []
 
-    def update(self, bird):
+    def update(self, bird, screen):
         if self.type == 'pipe':
             self.update_pipe()
         elif self.type == 'blackhole' or self.type == 'aurora':
@@ -76,7 +76,7 @@ class Pipe:
         elif self.type == 'laser_gate':
             self.update_laser_gate()
         elif self.type == 'thermal_detonator':
-            self.update_thermal_detonator(bird)
+            self.update_thermal_detonator(bird, screen)
         elif self.type == 'tie_fighter':
             self.update_tie_fighter(bird)
 
@@ -95,12 +95,12 @@ class Pipe:
         self.bottom_rect.x = self.x
         self.oscillate_laser_gate()
 
-    def update_thermal_detonator(self, bird):
+    def update_thermal_detonator(self, bird, screen):
         self.x -= self.speed
         self.rect.x = self.x
         if not self.exploded and self.rect.colliderect(bird.rect):
             self.exploded = True
-            self.trigger_explosion(bird)
+            self.trigger_explosion(bird, screen)
 
     def update_tie_fighter(self, bird):
         self.x -= self.speed
@@ -169,17 +169,17 @@ class Pipe:
         bottom_pipe_surface = pygame.Surface((PIPE_WIDTH, self.bottom_rect.height), pygame.SRCALPHA)
         top_pipe_surface.fill(self.color)
         bottom_pipe_surface.fill(self.color)
-
+    
         top_rotated = pygame.transform.rotate(top_pipe_surface, self.rotation_angle)
         bottom_rotated = pygame.transform.rotate(bottom_pipe_surface, self.rotation_angle)
-
+    
         screen.blit(top_rotated, self.top_rect.topleft)
         screen.blit(bottom_rotated, self.bottom_rect.topleft)
-
+    
         if self.has_hazard:
             pygame.draw.rect(screen, self.hazard_color, (self.top_rect.x, self.top_rect.y + self.top_rect.height - 5, self.top_rect.width, 5))
             pygame.draw.rect(screen, self.hazard_color, (self.bottom_rect.x, self.bottom_rect.y, self.bottom_rect.width, 5))
-
+    
         if self.has_power_up:
             pygame.draw.rect(screen, self.power_up_color, self.power_up_rect)
 
@@ -195,7 +195,7 @@ class Pipe:
         for laser in self.lasers:
             pygame.draw.rect(screen, RED, laser)
 
-    def trigger_explosion(self, bird):
+    def trigger_explosion(self, bird, screen):
         explosion_radius = 50
         pygame.draw.circle(screen, (255, 140, 0), self.rect.center, explosion_radius)
         if bird.rect.colliderect(self.rect.inflate(explosion_radius, explosion_radius)):
@@ -222,7 +222,7 @@ class Pipe:
                 return True
         elif self.type == 'thermal_detonator':
             if self.rect.colliderect(bird.rect) and not self.exploded:
-                self.trigger_explosion(bird)
+                self.trigger_explosion(bird, screen)
                 return True
         elif self.type == 'tie_fighter':
             if self.rect.colliderect(bird.rect):

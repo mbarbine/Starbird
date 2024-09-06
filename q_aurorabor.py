@@ -34,8 +34,8 @@ class AuroraBorealis:
         self.quantum_chaos_active = True
         self.chaos_timer = random.randint(100, 200)  # Quantum chaos lasts for a random duration
 
-    def update(self, bird=None):
-        """Update position, color, glow intensity, and handle quantum chaos."""
+    def update(self, bird=None, screen=None):
+        """Update position, color, glow intensity, handle quantum chaos, and draw."""
         self.x -= self.speed
         self.color_change_timer += 1
 
@@ -61,6 +61,10 @@ class AuroraBorealis:
         if bird and self.collide(bird):
             self.apply_effect(bird)
 
+        # Draw the aurora on the screen
+        if screen:
+            self.draw(screen)
+
     def quantum_chaos_effect(self):
         """Apply random effects during quantum chaos."""
         if random.random() < 0.1:  # 10% chance to flip direction
@@ -84,9 +88,7 @@ class AuroraBorealis:
     def collide(self, bird):
         """Check if the aurora collides with the bird."""
         aurora_rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        if aurora_rect.colliderect(bird.rect):
-            return True
-        return False
+        return aurora_rect.colliderect(bird.rect)
 
     def hit_by_laser(self, lasers):
         """Check if the aurora is hit by a laser."""

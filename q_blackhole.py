@@ -32,8 +32,8 @@ class QBlackHole:
         self.chaos_timer = 0
         self.chaos_duration = random.randint(100, 200)  # Random duration for chaos effect
 
-    def update(self, bird=None):
-        """Update black hole position, handle chaos effects, and apply gravity on the bird."""
+    def update(self, bird=None, screen=None):
+        """Update black hole position, handle chaos effects, apply gravity on the bird, and draw the black hole."""
         self.x -= self.speed
         self.pulse_offset += self.pulse_speed
         self.quantum_effect_timer += 1
@@ -59,6 +59,10 @@ class QBlackHole:
         # Ensure the black hole is within screen bounds
         if self.off_screen():
             self.blackhole_sound.stop()
+
+        # Draw the black hole on the screen
+        if screen:
+            self.draw(screen)
 
     def activate_chaos(self):
         """Activate quantum chaos, altering the black hole's properties randomly."""

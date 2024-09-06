@@ -154,7 +154,7 @@ def main():
             lasers = [laser for laser in lasers if laser.rect.x < WINDOW_WIDTH]
 
             for obstacle in obstacles:
-                obstacle.update(bird)  # Pass bird to obstacle updates
+                obstacle.update(bird, screen)  # Pass bird to obstacle updates
 
                 if obstacle.collide(bird):
                     if not shield_active:
@@ -165,12 +165,12 @@ def main():
                 if obstacle.off_screen():
                     obstacles.remove(obstacle)
                     x_position = WINDOW_WIDTH + PIPE_WIDTH
-                    obstacle_type = np.random.choice(['pipe', 'blackhole', 'auroraborealis'], p=[0.7, 0.15, 0.15])
+                    obstacle_type = np.random.choice(['pipe', 'blackhole', 'AuroraBorealis'], p=[0.7, 0.15, 0.15])
                     if obstacle_type == 'pipe':
                         obstacles.append(Pipe(x_position, speed=(PIPE_SPEED + difficulty_increment)))
                     elif obstacle_type == 'blackhole':
                         obstacles.append(QBlackHole(x_position))
-                    elif obstacle_type == 'auroraborealis':
+                    elif obstacle_type == 'AuroraBorealis':
                         obstacles.append(AuroraBorealis(x_position))
                     score += 1
                     score_sound.play()
