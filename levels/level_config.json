@@ -1,0 +1,12 @@
+{
+    "level1": {
+        "obstacle_speed": 5,
+        "gap_size": 200,
+        "background": "../assets/background.png"
+    },
+    "level2": {
+        "obstacle_speed": 7,
+        "gap_size": 180,
+        "background": "../assets/background.png"
+    }
+}
