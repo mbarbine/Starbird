@@ -2,7 +2,7 @@
 WINDOW_WIDTH = 800  # Increased resolution for a modern display
 WINDOW_HEIGHT = 600  # 16:9 aspect ratio for widescreen
 FPS = 75  # Increased FPS for smoother gameplay
-FULLSCREEN = False  # Toggle for fullscreen mode
+FULLSCREEN = True # Toggle for fullscreen mode
 WINDOW_TITLE = "Starbird: Quantum Edition"  # Custom window title
 
 # Colors
@@ -20,7 +20,7 @@ MAX_DIFFICULTY = 3.0  # Increased difficulty scaling cap for advanced players
 DIFFICULTY_CURVE = "exponential"  # Linear, exponential, or custom curve
 
 # Bird Settings
-BIRD_WIDTH = 60  # Slightly larger bird for visibility on high-res screens
+BIRD_WIDTH = 80  # Slightly larger bird for visibility on high-res screens
 BIRD_HEIGHT = 42  # Adjusted proportionally to width
 BIRD_START_X = 100  # More space from the left edge
 BIRD_START_Y = WINDOW_HEIGHT // 2
