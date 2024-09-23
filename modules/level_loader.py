@@ -3,10 +3,9 @@
 import importlib
 import json
 import os
-import random
 import logging
-from modules.pipe import Pipe
-from modules.settings import PIPE_WIDTH, GAP_SIZE, PIPE_SPEED, HEIGHT, WIDTH
+from pipe import Pipe
+from settings import PIPE_WIDTH, GAP_SIZE, PIPE_SPEED, HEIGHT, WIDTH
 
 def load_level(level_number):
     """
@@ -56,7 +55,7 @@ def spawn_quantum_element(level_config, screen_width, screen_height):
 
     if quantum_element_type:
         try:
-            quantum_module = importlib.import_module(f'quantum_elements.{quantum_element_type}')
+            quantum_module = importlib.import_module(f'modules.quantum_elements.{quantum_element_type}')
             return quantum_module.create_quantum_element(screen_width, screen_height)
         except ImportError as e:
             logging.error(f"Error loading quantum element module '{quantum_element_type}': {e}")
@@ -124,9 +123,31 @@ def add_initial_obstacles(level_config, level_number):
     num_obstacles = level_config.get('num_obstacles', 3)
 
     for _ in range(num_obstacles):
-        obstacles.append(Pipe(WIDTH, obstacle_speed, GAP_SIZE))
+        obstacle = Pipe(WIDTH, obstacle_speed, GAP_SIZE)
+        obstacles.append(obstacle)
+        logging.info("New pipe obstacle added.")
     
+    logging.info(f"Level {level_number} loaded with {len(obstacles)} obstacles.")
     return obstacles
+
+def add_obstacle(level_config, obstacles, screen_width):
+    """
+    Adds a single obstacle to the obstacles list based on level configuration.
+
+    Args:
+        level_config (dict): Configuration data for the level.
+        obstacles (list): List of current obstacles.
+        screen_width (int): Width of the game screen.
+    """
+    obstacle_speed = level_config.get('obstacle_speed', 5)
+    obstacle_type = level_config.get('obstacle_type', 'pipe')
+    
+    if obstacle_type == 'pipe':
+        obstacle = Pipe(screen_width, obstacle_speed, GAP_SIZE)
+        obstacles.append(obstacle)
+        logging.info("New pipe obstacle added.")
+    else:
+        logging.warning(f"Unknown obstacle type: {obstacle_type}. No obstacle added.")
 
 def get_level_background(level_config):
     """

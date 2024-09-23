@@ -1,211 +1,335 @@
+# main_2.py
+
 import pygame
+import numpy as np
 import sys
-import numpy as np  # Import NumPy for efficient calculations
+import concurrent.futures
+import logging
+import random  # Added for random events
 from modules.bird import Bird
 from modules.pipe import Pipe
-from modules.backgrounds import ScrollingBackground
 from modules.settings import *
-from modules.q_blackhole import QBlackHole
-from modules.q_aurorabor import AuroraBorealis
+from modules.force_lightning import activate_force_lightning
+# from modules.force_shield import activate_force_shield  # Not needed if handled within Bird
+from modules.holocron import Holocron
+from modules.dark_side import dark_side_choice
+from modules.jedi_training import jedi_training
+from modules.death_star import death_star_battle
+from modules.level_loader import (
+    load_level,
+    get_level_background,
+    add_initial_obstacles,
+    spawn_quantum_element,
+    handle_level_progression
+)
+from modules.story import star_wars_intro, read_story_text
+from modules.text_effects import draw_text
+from modules.backgrounds import ScrollingBackground  # Adjusted import based on directory structure
 
-class Laser:
-    def __init__(self, x, y):
-        self.rect = pygame.Rect(x, y, 5, 2)  # Laser dimensions
-        self.speed = LASER_SPEED
+# Initialize logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-    def update(self):
-        self.rect.x += self.speed
 
-    def draw(self, screen):
-        pygame.draw.rect(screen, LASER_COLOR, self.rect)  # Red lasers
+def main():
+    """Main function to run the game."""
+    # Initialize Pygame
+    pygame.init()
+
+    # Game window setup
+    screen = init_game_window()
+    clock = pygame.time.Clock()
+
+    # Initialize Scrolling Background
+    background = ScrollingBackground()
+
+    # Display the Star Wars-style intro
+    star_wars_intro(screen)
+
+    # Load game font
+    font = load_game_font()
+
+    # Initialize game variables
+    current_level = STARTING_LEVEL
+    score = 0
+    high_score = load_high_score()
+    bird = Bird()
+
+    # Load level configuration
+    try:
+        level_config = load_level(current_level)
+    except Exception as e:
+        logging.error(f"Failed to load level {current_level}: {e}")
+        pygame.quit()
+        sys.exit()
+
+    # Initialize obstacles
+    obstacles = add_initial_obstacles(level_config, current_level)
+
+    # Initialize quantum elements
+    quantum_elements = []  # Separate list for quantum elements
+
+    # Initialize Holocron
+    holocron = Holocron(WIDTH, HEIGHT) if Holocron else None
+
+    # Initialize thread pool executor for handling quantum events
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+
+    # Get quantum probability from level config
+    QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.1)  # Default to 0.1 if not set
+
+    running = True
+    story_line = 0
+
+    # Main game loop
+    while running:
+        clock.tick(FPS)
+
+        # Update background
+        background.update()
+        background.draw(screen)
+
+        # Event handling
+        running = handle_events(bird, screen)
+
+        # Update bird
+        bird.update()
+
+        # Handle quantum events
+        if quantum_elements:
+            for quantum_element in quantum_elements:
+                executor.submit(quantum_event_task, bird, quantum_element)
+
+        # Quantum Elements Spawning Logic
+        if random.random() < QUANTUM_PROBABILITY:
+            quantum_element = spawn_quantum_element(level_config, WIDTH, HEIGHT)
+            if quantum_element:
+                quantum_elements.append(quantum_element)
+                logging.debug("Quantum element spawned.")
+
+        # Update and draw obstacles
+        update_obstacles(level_config, obstacles, score, current_level)
+        draw_game_elements(screen, bird, obstacles, quantum_elements, holocron)
+
+        # Handle game mechanics
+        check_holocron_collection(bird, holocron)
+        random_dark_side_event(obstacles, bird, screen)  # Pass bird and screen if needed
+        random_jedi_training(screen, bird)
+        random_hyperspace_event(bird)
+
+        # Check collisions
+        if check_collisions(bird, obstacles, quantum_elements):
+            handle_collision(bird)
+            update_leaderboard(score, high_score)
+            running = False
+
+        # Level progression
+        current_level, background, level_config = handle_level_progression(
+            score,
+            current_level,
+            background,
+            screen,
+            obstacles,
+            level_config  # Pass the current level_config
+        )
+
+        # Update QUANTUM_PROBABILITY if a new level was loaded
+        if level_config:
+            QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.1)  # Update with new level's probability
+
+        # Update score
+        score += 1
+
+        # Draw HUD
+        draw_hud(screen, font, score, high_score)
+
+        # Update display
+        pygame.display.flip()
+
+        # Check if bird is off-screen
+        if bird.rect.y > HEIGHT or bird.rect.y < 0:
+            update_leaderboard(score, high_score)
+            running = False
+
+    # Shut down executor and quit
+    executor.shutdown(wait=True)
+    pygame.quit()
+
+
+def init_game_window():
+    """Initializes the game window."""
+    try:
+        if FULLSCREEN:
+            screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+        else:
+            screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        logging.info("Game window initialized successfully.")
+    except pygame.error as e:
+        logging.error(f"Error initializing game window: {e}")
+        screen = pygame.display.set_mode((800, 600))  # Fallback resolution
+    pygame.display.set_caption(WINDOW_TITLE)
+    return screen
+
+
+def load_game_font():
+    """Loads the game font."""
+    try:
+        font = pygame.font.Font(None, FONT_SIZE)
+        logging.info("Game font loaded successfully.")
+        return font
+    except pygame.error as e:
+        logging.error(f"Error loading font: {e}")
+        return pygame.font.SysFont(None, FONT_SIZE)
+
+
+def handle_events(bird, screen):
+    """Handles user input and events."""
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            logging.info("Quit event detected.")
+            return False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE and not bird.is_flapping:
+                bird.flap()
+            elif event.key == pygame.K_s:
+                if not bird.shield_active and bird.shield_duration == 0:
+                    bird.apply_power_up("shield")
+            elif event.key == pygame.K_l:
+                if not bird.lightsaber_active:
+                    bird.apply_power_up("lightsaber")
+    return True
+
+
+def activate_special_ability(bird):
+    """
+    Activates the bird's special ability based on current ability type.
+    For example: shield, laser, speed boost.
+    """
+    ability = bird.get_current_ability()  # Ensure this method exists in Bird class
+    logging.info(f"Activating special ability: {ability}")
+    if ability == 'Shield':
+        bird.apply_power_up("shield")
+    elif ability == 'Laser':
+        activate_force_lightning(bird.rect)
+    elif ability == 'Speed':
+        bird.speed_boost()  # Ensure this method exists in Bird class
+    else:
+        logging.warning(f"Unknown ability: {ability}")
+
+
+def quantum_event_task(bird, quantum_element):
+    """Handles quantum events in a separate thread."""
+    try:
+        updated_velocity = handle_quantum_event(bird, quantum_element, bird.velocity)
+        bird.velocity = updated_velocity
+        logging.debug("Quantum event handled successfully.")
+    except Exception as e:
+        logging.error(f"Error in quantum event task: {e}")
+
+
+def update_obstacles(level_config, obstacles, score, current_level):
+    """Updates obstacle positions and spawns new obstacles as needed."""
+    for obstacle in obstacles:
+        if hasattr(obstacle, 'update'):
+            obstacle.update()
+        else:
+            logging.error(f"Obstacle {obstacle} does not have an 'update' method.")
+    
+    # Spawn new obstacles based on spawn rate
+    if score % PIPE_SPAWN_RATE == 0 and score != 0:
+        add_obstacle(level_config, obstacles, WIDTH)
+        logging.debug("New obstacle spawned.")
+
+
+def draw_game_elements(screen, bird, obstacles, quantum_elements, holocron):
+    """Draws all game elements on the screen."""
+    bird.draw(screen)
+    draw_obstacles(screen, obstacles)
+    draw_quantum_elements(screen, quantum_elements)
+    if holocron:
+        holocron.draw(screen)
+    # Draw additional elements like UI overlays if needed
+
+
+def draw_obstacles(screen, obstacles):
+    """Draws all obstacles on the screen."""
+    for obstacle in obstacles:
+        obstacle.draw(screen)
+
+
+def draw_quantum_elements(screen, quantum_elements):
+    """Draws all quantum elements on the screen."""
+    for element in quantum_elements:
+        if hasattr(element, 'draw'):
+            element.draw(screen)
+
+
+def check_collisions(bird, obstacles, quantum_elements):
+    """Checks for collisions with obstacles and quantum elements."""
+    collision = False
+    for obstacle in obstacles:
+        if hasattr(obstacle, 'rect') and bird.rect.colliderect(obstacle.rect):
+            logging.info("Collision detected with obstacle.")
+            collision = True
+            break
+    if not collision:
+        for element in quantum_elements:
+            if hasattr(element, 'rect') and bird.rect.colliderect(element.rect):
+                logging.info("Collision detected with quantum element.")
+                collision = True
+                break
+    return collision
+
+
+def handle_collision(bird):
+    """Handles the collision event."""
+    bird.is_flapping = False
+    bird.velocity = 0
+    # Implement additional collision handling like reducing lives, playing sounds, etc.
+    logging.info("Handled collision: Bird stopped flapping and velocity reset.")
+
+
+def draw_hud(screen, font, score, high_score):
+    """Draws the Heads-Up Display (HUD) on the screen."""
+    draw_text(f"Score: {score}", font, BLUE, 10, 10, screen)
+    draw_text(f"High Score: {high_score}", font, RED, 10, 50, screen)
+    # Add more HUD elements like lives, power-up indicators, etc.
+
+
+def update_leaderboard(score, high_score):
+    """Updates the leaderboard with the current score."""
+    if score > high_score:
+        logging.info(f"New high score achieved: {score}")
+        save_high_score(score)
+
+
+def save_high_score(score):
+    """Saves the new high score to a file."""
+    try:
+        with open(HIGH_SCORE_FILE, 'w') as f:
+            f.write(str(score))
+        logging.info("High score saved successfully.")
+    except IOError as e:
+        logging.error(f"Error saving high score: {e}")
+
 
 def load_high_score():
+    """Loads the high score from a file."""
     try:
         with open(HIGH_SCORE_FILE, 'r') as f:
             score = f.read().strip()
-            return int(score) if score.isdigit() else 0
-    except (FileNotFoundError, ValueError):
+            high_score = int(score) if score.isdigit() else 0
+            logging.info(f"High score loaded: {high_score}")
+            return high_score
+    except FileNotFoundError:
+        # Create the file if it doesn't exist
+        with open(HIGH_SCORE_FILE, 'w') as f:
+            f.write('0')
+        logging.warning(f"High score file not found. Created new file at {HIGH_SCORE_FILE}. Setting high score to 0.")
+        return 0
+    except Exception as e:
+        logging.warning(f"Error loading high score: {e}. Setting high score to 0.")
         return 0
 
-def save_high_score(score):
-    high_score = load_high_score()
-    if score > high_score:
-        with open(HIGH_SCORE_FILE, 'w') as f:
-            f.write(str(score))
-
-def draw_text(screen, text, size, color, x, y):
-    font = pygame.font.SysFont(None, size)
-    text_surface = font.render(text, True, color)
-    text_rect = text_surface.get_rect()
-    text_rect.midtop = (x, y)
-    screen.blit(text_surface, text_rect)
-
-def start_screen(screen):
-    screen.fill(START_SCREEN_COLOR)
-    draw_text(screen, "STARBIRD", 64, BIRD_COLOR, WINDOW_WIDTH // 2, WINDOW_HEIGHT // 4)
-    draw_text(screen, "Press SPACE or UP to Start", 22, BIRD_COLOR, WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
-    pygame.display.flip()
-    wait_for_key()
-
-def game_over_screen(screen, score):
-    screen.fill(GAME_OVER_COLOR)
-    draw_text(screen, "GAME OVER", 64, BIRD_COLOR, WINDOW_WIDTH // 2, WINDOW_HEIGHT // 4)
-    draw_text(screen, f"Score: {score}", 22, BIRD_COLOR, WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
-    draw_text(screen, "Press SPACE or UP to Restart", 22, BIRD_COLOR, WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2 + 50)
-    pygame.display.flip()
-    save_high_score(score)
-    wait_for_key()
-
-def wait_for_key():
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE or event.key == pygame.K_UP:
-                    return
-
-def main():
-    pygame.init()
-    pygame.mixer.init()  # Initialize the mixer before loading sounds
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Starbird")
-    clock = pygame.time.Clock()
-
-    # Load Sounds
-    flap_sound = pygame.mixer.Sound(FLAP_SOUND)
-    score_sound = pygame.mixer.Sound(SCORE_SOUND)
-    hit_sound = pygame.mixer.Sound(HIT_SOUND)
-    laser_sound = pygame.mixer.Sound(LASER_SOUND)  # Laser sound
-
-    # Background
-    background = ScrollingBackground()
-
-    start_screen(screen)
-
-    # Slowdown control variables
-    slowdown = False
-    slowdown_timer = 0
-
-    # Shield effect
-    shield_active = False
-    shield_timer = 0
-
-    while True:
-        bird = Bird()
-        obstacles = []
-        for i in range(3):
-            x_position = WINDOW_WIDTH + i * (PIPE_WIDTH + 200)
-            obstacle_type = np.random.choice(['pipe', 'blackhole', 'AuroraBorealis'], p=[0.7, 0.15, 0.15])
-            if obstacle_type == 'pipe':
-                obstacles.append(Pipe(x_position))
-            elif obstacle_type == 'blackhole':
-                obstacles.append(QBlackHole(x_position))
-            elif obstacle_type == 'AuroraBorealis':
-                obstacles.append(AuroraBorealis(x_position))
-                
-        lasers = []
-        score = 0
-        high_score = load_high_score()
-        difficulty_increment = 0
-        flap_cooldown = 0
-        laser_cooldown = 0
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key in [pygame.K_SPACE, pygame.K_UP] and flap_cooldown == 0:
-                        bird.flap()
-                        flap_sound.play()
-                        flap_cooldown = FLAP_COOLDOWN_TIME
-                    if event.key == pygame.K_LCTRL and laser_cooldown == 0:  # Shoot laser with K_LCTRL
-                        laser_sound.play()
-                        lasers.append(Laser(bird.rect.right, bird.rect.centery))
-                        laser_cooldown = LASER_COOLDOWN_TIME
-
-            if flap_cooldown > 0:
-                flap_cooldown -= 1
-
-            if laser_cooldown > 0:
-                laser_cooldown -= 1
-
-            if slowdown:
-                if slowdown_timer > 0:
-                    slowdown_timer -= 1
-                else:
-                    slowdown = False
-
-            if shield_active:
-                if shield_timer > 0:
-                    shield_timer -= 1
-                else:
-                    shield_active = False
-
-            bird.update()
-            background.update()
-
-            for laser in lasers:
-                laser.update()
-
-            lasers = [laser for laser in lasers if laser.rect.x < WINDOW_WIDTH]
-
-            for obstacle in obstacles:
-                obstacle.update(bird, screen)  # Pass bird to obstacle updates
-
-                if obstacle.collide(bird):
-                    if not shield_active:
-                        hit_sound.play()
-                        game_over_screen(screen, score)
-                        break
-
-                if obstacle.off_screen():
-                    obstacles.remove(obstacle)
-                    x_position = WINDOW_WIDTH + PIPE_WIDTH
-                    obstacle_type = np.random.choice(['pipe', 'blackhole', 'AuroraBorealis'], p=[0.7, 0.15, 0.15])
-                    if obstacle_type == 'pipe':
-                        obstacles.append(Pipe(x_position, speed=(PIPE_SPEED + difficulty_increment)))
-                    elif obstacle_type == 'blackhole':
-                        obstacles.append(QBlackHole(x_position))
-                    elif obstacle_type == 'AuroraBorealis':
-                        obstacles.append(AuroraBorealis(x_position))
-                    score += 1
-                    score_sound.play()
-
-                    # Increase difficulty every 5 points
-                    if score % 5 == 0:
-                        difficulty_increment += DIFFICULTY_INCREASE
-
-                if obstacle.hit_by_laser(lasers):
-                    obstacles.remove(obstacle)
-                    score += 5  # Extra points for destroying an obstacle with a laser
-                    score_sound.play()
-
-            else:
-                # Continue game loop
-                background.draw(screen)
-                bird.draw(screen)
-                for obstacle in obstacles:
-                    obstacle.draw(screen)
-                for laser in lasers:
-                    laser.draw(screen)
-
-                # Draw shield around bird if active
-                if shield_active:
-                    pygame.draw.circle(screen, SHIELD_COLOR, bird.rect.center, BIRD_WIDTH // 2 + 10, 3)
-
-                # Display score in white
-                draw_text(screen, f"Score: {score}", 36, (255, 255, 255), 70, 10)
-                draw_text(screen, f"High Score: {high_score}", 24, (255, 255, 255), WINDOW_WIDTH - 100, 10)
-
-                pygame.display.flip()
-                clock.tick(FPS)
-                continue
-
-            break  # Exit loop if a collision occurs
 
 if __name__ == "__main__":
     main()

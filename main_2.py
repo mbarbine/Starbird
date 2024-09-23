@@ -1,7 +1,6 @@
 # main_2.py
 
 import pygame
-import numpy as np
 import sys
 import concurrent.futures
 import logging
@@ -19,6 +18,7 @@ from modules.level_loader import (
     load_level,
     get_level_background,
     add_initial_obstacles,
+    add_obstacle,
     spawn_quantum_element,
     handle_level_progression
 )
@@ -28,6 +28,14 @@ from modules.backgrounds import ScrollingBackground  # Adjusted import based on 
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def check_holocron_collection(bird, holocron):
+    """Checks if the bird has collected a Holocron."""
+    if holocron and holocron.collect(bird.rect):
+        logging.info("Holocron collected.")
+        # Implement holocron effects, e.g., granting abilities or power-ups
+        bird.apply_power_up("shield")  # Example power-up
 
 
 def main():
@@ -329,6 +337,96 @@ def load_high_score():
     except Exception as e:
         logging.warning(f"Error loading high score: {e}. Setting high score to 0.")
         return 0
+
+
+def handle_level_progression(score, current_level, background, screen, obstacles, level_config):
+    """
+    Handles level progression based on the score.
+
+    Args:
+        score (int): Current game score.
+        current_level (int): Current level number.
+        background (ScrollingBackground): Current background object.
+        screen (pygame.Surface): Pygame screen surface.
+        obstacles (list): List of current obstacles.
+        level_config (dict): Current level configuration.
+
+    Returns:
+        tuple: (updated_level_number, updated_background, updated_level_config)
+    """
+    LEVEL_THRESHOLD = 100  # Ensure this constant is defined or imported
+
+    if score != 0 and score % LEVEL_THRESHOLD == 0:
+        current_level += 1
+        logging.info(f"Progressing to level {current_level}.")
+        try:
+            new_level_config = load_level(current_level)
+        except Exception as e:
+            logging.error(f"Failed to load level {current_level}: {e}")
+            # Retain the existing level_config if loading fails
+            return current_level, background, level_config
+        
+        new_obstacles = add_initial_obstacles(new_level_config, current_level)
+        if new_obstacles:
+            obstacles.extend(new_obstacles)
+            logging.info(f"Added {len(new_obstacles)} new obstacles for level {current_level}.")
+        
+        # Update background based on new level
+        new_background_path = get_level_background(new_level_config)
+        if new_background_path:
+            background.load_new_background(new_background_path)
+            logging.info(f"Background updated for level {current_level}.")
+    
+        # Return the new level configuration
+        return current_level, background, new_level_config
+    else:
+        # No level progression; retain the current level_config
+        return current_level, background, level_config
+
+
+def check_holocron_collection(bird, holocron):
+    """Checks if the bird has collected a Holocron."""
+    if holocron and holocron.collect(bird.rect):
+        logging.info("Holocron collected.")
+        # Implement holocron effects, e.g., granting abilities or power-ups
+        bird.apply_power_up("shield")  # Example power-up
+
+
+def random_dark_side_event(obstacles, bird, screen):
+    """Randomly triggers a Dark Side event."""
+    if random.randint(0, 99) < 5:  # 5% chance
+        if dark_side_choice():
+            for obstacle in obstacles:
+                obstacle.speed += 2
+            logging.info("Dark Side event triggered: Increased obstacle speed.")
+        else:
+            bird.apply_power_up("shield")  # Apply shield to bird
+            logging.info("Dark Side event triggered: Shield activated.")
+
+
+def random_jedi_training(screen, bird):
+    """Randomly triggers a Jedi Training event."""
+    if random.randint(0, 99) < 15:  # 15% chance
+        success = jedi_training(screen, WIDTH, HEIGHT, GREEN)
+        if success:
+            bird.apply_power_up("shield")
+            logging.info("Jedi Training succeeded: Shield activated.")
+        else:
+            bird.velocity += GRAVITY * 2
+            logging.info("Jedi Training failed: Bird velocity increased.")
+
+
+def random_hyperspace_event(bird):
+    """Randomly triggers a hyperspace event."""
+    if random.randint(0, 99) < 5:  # 5% chance
+        # Implement hyperspace jump functionality
+        # Example: Teleport bird to a random position
+        new_x = random.randint(50, WIDTH - 50)
+        new_y = random.randint(50, HEIGHT - 50)
+        bird.rect.x = new_x
+        bird.rect.y = new_y
+        bird.velocity = 0
+        logging.info(f"Hyperspace jump: Bird teleported to ({new_x}, {new_y}).")
 
 
 if __name__ == "__main__":

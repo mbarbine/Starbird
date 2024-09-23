@@ -63,11 +63,11 @@ FLAP_COOLDOWN_TIME = 8  # Reduced cooldown
 BOOST_MULTIPLIER = 2.0  # Stronger boost
 
 # Background Settings
-BACKGROUND_IMAGE = '../assets/background.png'  # Space-themed background
+BACKGROUND_IMAGE = 'assets/background.png'  # Space-themed background
 BACKGROUND_SCROLL_SPEED = 2  # Faster scroll speed
 BACKGROUND_LOOP = True  # Looping background
 PARALLAX_EFFECT = True  # Enable parallax scrolling
-BACKGROUND_LAYERS = ['../assets/layer1.png', '../assets/layer2.png']  # Parallax layers
+BACKGROUND_LAYERS = ['assets/layer1.png', 'assets/layer2.png']  # Parallax layers
 BACKGROUND_STAR_ANIMATION = True  # Twinkling stars
 
 # Additional Background Effects
