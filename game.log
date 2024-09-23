@@ -1,0 +1,12 @@
+2024-09-23 16:10:35,678 - INFO - Game window initialized successfully.
+2024-09-23 16:10:35,732 - INFO - Background loaded from ./assets/background.png.
+2024-09-23 16:10:35,780 - DEBUG - Successfully loaded extension "markdown.extensions.meta.MetaExtension".
+2024-09-23 16:10:36,449 - INFO - Game font loaded successfully.
+2024-09-23 16:10:36,449 - INFO - High score loaded: 128
+2024-09-23 16:10:36,452 - INFO - New pipe obstacle added.
+2024-09-23 16:10:36,452 - INFO - New pipe obstacle added.
+2024-09-23 16:10:36,452 - INFO - New pipe obstacle added.
+2024-09-23 16:10:36,452 - INFO - New pipe obstacle added.
+2024-09-23 16:10:36,452 - INFO - New pipe obstacle added.
+2024-09-23 16:10:36,452 - INFO - New pipe obstacle added.
+2024-09-23 16:10:36,452 - INFO - Level 1 loaded with 6 obstacles.

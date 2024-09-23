@@ -71,10 +71,10 @@ def main():
         sys.exit()
 
     # Initialize obstacles
-    obstacles = add_initial_obstacles(level_config, current_level)
+    obstacles = add_initial_obstacles(level_config)  # current_level argument removed
 
     # Initialize quantum elements
-    quantum_elements = []  # Separate list for quantum elements
+    quantum_elements = []
 
     # Initialize Holocron
     holocron = Holocron(WIDTH, HEIGHT) if Holocron else None
@@ -83,10 +83,9 @@ def main():
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
 
     # Get quantum probability from level config
-    QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.1)  # Default to 0.1 if not set
+    QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.1)
 
     running = True
-    story_line = 0
 
     # Main game loop
     while running:
@@ -120,7 +119,7 @@ def main():
 
         # Handle game mechanics
         check_holocron_collection(bird, holocron)
-        random_dark_side_event(obstacles, bird, screen)  # Pass bird and screen if needed
+        random_dark_side_event(obstacles, bird, screen)
         random_jedi_training(screen, bird)
         random_hyperspace_event(bird)
 
@@ -137,12 +136,11 @@ def main():
             background,
             screen,
             obstacles,
-            level_config  # Pass the current level_config
+            level_config
         )
 
         # Update QUANTUM_PROBABILITY if a new level was loaded
-        if level_config:
-            QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.1)  # Update with new level's probability
+        QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.1)
 
         # Update score
         score += 1
@@ -161,6 +159,38 @@ def main():
     # Shut down executor and quit
     executor.shutdown(wait=True)
     pygame.quit()
+
+def handle_quantum_event(bird, quantum_element, current_velocity):
+    """
+    Handles the interaction between the bird and a quantum element.
+
+    Args:
+        bird (Bird): The bird object.
+        quantum_element (QuantumElement): The quantum element to interact with.
+        current_velocity (float): The current velocity of the bird.
+
+    Returns:
+        float: The updated velocity after interacting with the quantum element.
+    """
+    # Define known quantum element types and their effects
+    if hasattr(quantum_element, 'type'):
+        if quantum_element.type == 'black_hole':
+            new_velocity = current_velocity * 1.5  # Increase velocity
+            logging.info(f"Interacted with {quantum_element.type}: Velocity increased to {new_velocity}.")
+        elif quantum_element.type == 'wormhole':
+            new_velocity = current_velocity * 0.5  # Reduce velocity
+            logging.info(f"Interacted with {quantum_element.type}: Velocity decreased to {new_velocity}.")
+        else:
+            new_velocity = current_velocity
+            logging.warning(f"Unknown quantum element type: {quantum_element.type}. No effect.")
+    else:
+        new_velocity = current_velocity
+        logging.warning(f"Quantum element does not have a type attribute. No effect.")
+    
+    return new_velocity
+
+# Adjust quantum event spawning probability
+QUANTUM_PROBABILITY = 0.02  # Lower probability for less frequent quantum events
 
 
 def init_game_window():
@@ -189,6 +219,7 @@ def load_game_font():
         return pygame.font.SysFont(None, FONT_SIZE)
 
 
+# Modify bird movement parameters to make controls smoother
 def handle_events(bird, screen):
     """Handles user input and events."""
     for event in pygame.event.get():
@@ -205,6 +236,7 @@ def handle_events(bird, screen):
                 if not bird.lightsaber_active:
                     bird.apply_power_up("lightsaber")
     return True
+
 
 
 def activate_special_ability(bird):
@@ -242,8 +274,9 @@ def update_obstacles(level_config, obstacles, score, current_level):
         else:
             logging.error(f"Obstacle {obstacle} does not have an 'update' method.")
     
-    # Spawn new obstacles based on spawn rate
-    if score % PIPE_SPAWN_RATE == 0 and score != 0:
+    # Adjust spawn rate for new obstacles based on score
+    spawn_interval = level_config.get('pipe_spawn_rate', PIPE_SPAWN_RATE)
+    if score % spawn_interval == 0 and score != 0:
         add_obstacle(level_config, obstacles, WIDTH)
         logging.debug("New obstacle spawned.")
 
@@ -295,12 +328,17 @@ def handle_collision(bird):
     # Implement additional collision handling like reducing lives, playing sounds, etc.
     logging.info("Handled collision: Bird stopped flapping and velocity reset.")
 
+CONTROL_DISPLAY_TIME = 5000  # Display controls for 5 seconds (5000 ms)
+control_display_timer = pygame.time.get_ticks()  # Get the current tick count
+
 
 def draw_hud(screen, font, score, high_score):
     """Draws the Heads-Up Display (HUD) on the screen."""
     draw_text(f"Score: {score}", font, BLUE, 10, 10, screen)
     draw_text(f"High Score: {high_score}", font, RED, 10, 50, screen)
-    # Add more HUD elements like lives, power-up indicators, etc.
+    # Show controls text for the first 5 seconds only
+    if pygame.time.get_ticks() - control_display_timer < CONTROL_DISPLAY_TIME:
+        draw_text("WASD: Move, Space: Flap, S: Shield, L: Lightsaber", font, WHITE, 10, HEIGHT - 50, screen)
 
 
 def update_leaderboard(score, high_score):
@@ -394,10 +432,10 @@ def check_holocron_collection(bird, holocron):
 
 def random_dark_side_event(obstacles, bird, screen):
     """Randomly triggers a Dark Side event."""
-    if random.randint(0, 99) < 5:  # 5% chance
+    if random.randint(0, 99) < 2:  # Lowered chance to 2%
         if dark_side_choice():
             for obstacle in obstacles:
-                obstacle.speed += 2
+                obstacle.speed += 1  # Slower speed increase
             logging.info("Dark Side event triggered: Increased obstacle speed.")
         else:
             bird.apply_power_up("shield")  # Apply shield to bird
@@ -406,13 +444,13 @@ def random_dark_side_event(obstacles, bird, screen):
 
 def random_jedi_training(screen, bird):
     """Randomly triggers a Jedi Training event."""
-    if random.randint(0, 99) < 15:  # 15% chance
+    if random.randint(0, 99) < 5:  # Lowered chance to 5%
         success = jedi_training(screen, WIDTH, HEIGHT, GREEN)
         if success:
             bird.apply_power_up("shield")
             logging.info("Jedi Training succeeded: Shield activated.")
         else:
-            bird.velocity += GRAVITY * 2
+            bird.velocity += GRAVITY * 1.5  # Reduced velocity increase
             logging.info("Jedi Training failed: Bird velocity increased.")
 
 

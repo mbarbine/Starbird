@@ -1,20 +1,18 @@
 {
     "level1": {
+        "background": "../assets/background_level1.png",
         "obstacle_speed": 5,
-        "gap_size": 200,
-        "background": "../assets/background.png",
         "obstacle_type": "pipe",
+        "num_obstacles": 3,
         "quantum_probability": 0.1,
-        "quantum_element": "QBlackHole",
-        "num_obstacles": 6
+        "quantum_element": "QBlackHole"
     },
     "level2": {
-        "obstacle_speed": 7,
-        "gap_size": 180,
-        "background": "../assets/background.png",
+        "background": "../assets/background_level2.png",
+        "obstacle_speed": 6,
         "obstacle_type": "pipe",
+        "num_obstacles": 4,
         "quantum_probability": 0.15,
-        "quantum_element": "AuroraBorealis",
-        "num_obstacles": 8
+        "quantum_element": "AuroraBorealis"
     }
 }

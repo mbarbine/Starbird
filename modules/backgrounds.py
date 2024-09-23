@@ -1,41 +1,34 @@
-# backgrounds.py
+# modules/backgrounds.py
 
 import pygame
+import os
 import logging
 
 class ScrollingBackground:
-    def __init__(self, background_path='./assets/background.png'):
-        try:
-            self.image = pygame.image.load(background_path).convert()
-            self.rect1 = self.image.get_rect()
-            self.rect2 = self.image.get_rect()
-            self.rect2.x = self.rect1.width
-            self.speed = 2  # Adjust as needed
-            logging.info(f"Background loaded from {background_path}.")
-        except pygame.error as e:
-            logging.error(f"Failed to load background image: {e}")
-            self.image = None
-
-    def load_new_background(self, background_path):
-        try:
-            self.image = pygame.image.load(background_path).convert()
-            self.rect1 = self.image.get_rect()
-            self.rect2 = self.image.get_rect()
-            self.rect2.x = self.rect1.width
-            logging.info(f"Background updated from {background_path}.")
-        except pygame.error as e:
-            logging.error(f"Failed to load new background image: {e}")
+    def __init__(self):
+        self.base_path = os.path.dirname(os.path.abspath(__file__))
+        self.image = pygame.image.load(os.path.join(self.base_path, '..', 'assets', 'background.png')).convert()
+        self.rect = self.image.get_rect()
+        self.scroll_speed = 2
+        self.x = 0
 
     def update(self):
-        if self.image:
-            self.rect1.x -= self.speed
-            self.rect2.x -= self.speed
-            if self.rect1.right <= 0:
-                self.rect1.x = self.rect2.right
-            if self.rect2.right <= 0:
-                self.rect2.x = self.rect1.right
+        self.x -= self.scroll_speed
+        if self.x <= -self.rect.width:
+            self.x = 0
 
     def draw(self, screen):
-        if self.image:
-            screen.blit(self.image, self.rect1)
-            screen.blit(self.image, self.rect2)
+        screen.blit(self.image, (self.x, 0))
+        screen.blit(self.image, (self.x + self.rect.width, 0))
+
+    def load_new_background(self, background_path):
+        full_path = os.path.join(self.base_path, '..', background_path)
+        try:
+            self.image = pygame.image.load(full_path).convert()
+            self.rect = self.image.get_rect()
+            logging.info(f"Background loaded from {full_path}.")
+        except pygame.error as e:
+            logging.error(f"Failed to load background from {full_path}: {e}")
+            # Fallback to default background
+            self.image = pygame.Surface((WIDTH, HEIGHT))
+            self.image.fill((0, 0, 0))  # Black background

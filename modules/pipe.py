@@ -1,7 +1,7 @@
 # pipe.py
 
 import pygame
-from modules.settings import PIPE_WIDTH, PIPE_COLOR, WINDOW_HEIGHT, GAP_SIZE  # Ensure PIPE_COLOR is defined in settings
+from modules.settings import PIPE_WIDTH, PIPE_COLOR, PIPE_HEIGHT, GAP_SIZE  # Ensure PIPE_COLOR is defined in settings
 
 
 class Pipe:
@@ -20,7 +20,7 @@ class Pipe:
             speed (int, optional): Movement speed of the pipe. Defaults to 5.
         """
         self.top_rect = pygame.Rect(x, 0, PIPE_WIDTH, top_height)
-        self.bottom_rect = pygame.Rect(x, WINDOW_HEIGHT - bottom_height, PIPE_WIDTH, bottom_height)
+        self.bottom_rect = pygame.Rect(x, PIPE_HEIGHT - bottom_height, PIPE_WIDTH, bottom_height)
         self.speed = speed
         # Combined rect for collision detection (optional)
         self.rect = pygame.Rect(x, 0, PIPE_WIDTH, top_height + bottom_height + GAP_SIZE)
