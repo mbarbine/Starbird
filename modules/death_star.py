@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from modules.settings import *
 class DeathStar:
     def __init__(self):
         self.image = pygame.image.load('assets/death_star.png')

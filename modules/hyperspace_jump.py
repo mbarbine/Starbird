@@ -1,7 +1,7 @@
 import numpy as np
 import ctypes
 import os
-from settings import *
+from modules.settings import *
 # Get the absolute path to the shared library
 library_path = os.path.join(os.path.dirname(__file__), 'hyperspace_shader.so')
 

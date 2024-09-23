@@ -1,17 +1,21 @@
+# modules/force_shield.py
+
 import pygame
 import time
-from settings import *
+from modules.settings import BLUE
+import logging
 
-def activate_force_shield(bird, duration=3):
-    shield_on = True
-    start_time = time.time()
-    
-    while shield_on:
-        elapsed_time = time.time() - start_time
-        if elapsed_time >= duration:
-            shield_on = False
-        
-        pygame.draw.circle(screen, BLUE, bird.center, bird.width + 10, 2)
-        pygame.display.flip()
-        pygame.time.wait(50)
+def activate_force_shield(bird, screen, duration=3):
+    """
+    Activates a shield around the bird for a specified duration.
 
+    Args:
+        bird (Bird): The bird object to protect.
+        screen (pygame.Surface): The Pygame screen surface.
+        duration (int, optional): Duration of the shield in seconds. Defaults to 3.
+    """
+    bird.shield_active = True
+    bird.shield_duration = duration * FPS  # Convert seconds to frames
+
+    # Optionally, you can add visual effects or sounds here
+    logging.info("Shield activated.")

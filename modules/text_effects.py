@@ -1,6 +1,6 @@
 import pygame
 import os
-from settings import *
+from modules.settings import *
 
 def render_star_wars_text(text, screen):
     """

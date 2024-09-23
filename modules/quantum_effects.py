@@ -3,7 +3,7 @@ import numpy as np
 import random
 import pygame
 import ctypes
-from settings import *
+from modules.settings import *
 QUANTUM_FLAP_STRENGTH = -20
 
 # Load CUDAq shared library

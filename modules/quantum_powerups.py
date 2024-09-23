@@ -1,8 +1,8 @@
 import pygame
 import random
 import numpy as np
-from quantum_flap import apply_quantum_flap
-from settings import *
+from modules.quantum_flap import apply_quantum_flap
+from modules.settings import *
 class QuantumPowerUp:
     def __init__(self, x, y, type):
         self.rect = pygame.Rect(x, y, 30, 30)  # Set the size of the power-up

@@ -1,6 +1,6 @@
 import pygame
 import time
-from settings import *
+from modules.settings import *
 def millennium_falcon_assist(obstacles, duration=5):
     falcon_image = pygame.image.load('assets/millennium_falcon.png')
     falcon_rect = falcon_image.get_rect()

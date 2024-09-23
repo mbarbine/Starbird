@@ -2,8 +2,8 @@ import pygame
 import numpy as np
 import subprocess
 import ctypes
-from quantum_flap import apply_quantum_flap
-from hyperspace_jump import activate_hyperspace_jump
+from modules.quantum_flap import apply_quantum_flap
+from modules.hyperspace_jump import activate_hyperspace_jump
 from quantum_decision import quantum_decision
 from physics import apply_gravity_gpu
 from starfighter_selection import select_starfighter
@@ -14,7 +14,7 @@ from dark_side import dark_side_choice
 from jedi_training import jedi_training
 from death_star import death_star_battle
 from level_loader import load_level, get_level_background, get_obstacle_speed, add_obstacle, spawn_quantum_element
-from settings import *
+from modules.settings import *
 from story import read_story_text
 
 # Initialize Pygame
@@ -152,6 +152,7 @@ def random_hyperspace_event():
 # Main game loop
 running = True
 story_line = 0  # Initialize the story line number
+score = 0  # Initialize the score
 while running:
     clock.tick(FPS)
     screen.blit(background_image, (0, 0))
@@ -183,10 +184,12 @@ while running:
     random_hyperspace_event()
 
     # Handle collisions and level progression
-    if bird.colliderect(top_obstacle) or bird.colliderect(bottom_obstacle):
-        is_falling = True
-        bird_velocity_array[0] = 0
-        quantum_element = spawn_quantum_element(level_module, WIDTH, HEIGHT)
+    for top_obstacle, bottom_obstacle in obstacles:
+        if bird.colliderect(top_obstacle) or bird.colliderect(bottom_obstacle):
+            is_falling = True
+            bird_velocity_array[0] = 0
+            quantum_element = spawn_quantum_element(level_module, WIDTH, HEIGHT)
+            break
 
     # Death Star battle at specific levels
     trigger_death_star_battle()
@@ -205,6 +208,12 @@ while running:
     draw_text(f"Score: {score}", font, BLUE, 10, 10)
     draw_text(f"High Score: {high_score}", font, RED, 10, 50)
 
+    # Function to update the leaderboard
+    def update_leaderboard(score):
+        # Placeholder implementation
+        # Replace with actual leaderboard update logic
+        return score > high_score
+    
     # Check if the bird hits the ground or goes off-screen
     if bird.y > HEIGHT or bird.y < 0:
         if update_leaderboard(score):

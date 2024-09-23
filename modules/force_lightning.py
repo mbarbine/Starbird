@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from modules.settings import *
 
 def activate_force_lightning(obstacles):
     for top_obstacle, bottom_obstacle in obstacles:

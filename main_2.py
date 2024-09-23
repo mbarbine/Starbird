@@ -1,338 +1,335 @@
+# main_2.py
+
 import pygame
 import numpy as np
 import sys
 import concurrent.futures
-from bird import Bird
-from pipe import Pipe
-from settings import *
-from q_blackhole import QBlackHole
-from q_aurorabor import AuroraBorealis
-from quantum_flap import apply_quantum_flap, handle_quantum_event
+import logging
+import random  # Added for random events
+from modules.bird import Bird
+from modules.pipe import Pipe
+from modules.settings import *
 from modules.force_lightning import activate_force_lightning
-from modules.force_shield import activate_force_shield
+# from modules.force_shield import activate_force_shield  # Not needed if handled within Bird
 from modules.holocron import Holocron
 from modules.dark_side import dark_side_choice
 from modules.jedi_training import jedi_training
 from modules.death_star import death_star_battle
-from modules.level_loader import load_level, get_level_background, get_obstacle_speed, add_obstacle, spawn_quantum_element
+from modules.level_loader import (
+    load_level,
+    get_level_background,
+    add_initial_obstacles,
+    spawn_quantum_element,
+    handle_level_progression
+)
 from modules.story import star_wars_intro, read_story_text
 from modules.text_effects import draw_text
+from modules.backgrounds import ScrollingBackground  # Adjusted import based on directory structure
 
-# Define game window properties
-# Define bird abilities if they are part of the Bird class
-bird_ability = 'None'  # Default ability, can be 'Shield', 'Laser', 'Speed', etc.
+# Initialize logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Fallback function for applying gravity
-def apply_gravity_fallback(bird_velocity, gravity=GRAVITY):
-    return bird_velocity + gravity
 
-# Implement or import handle_level_progression
-def handle_level_progression(score, current_level):
-    if score % LEVEL_THRESHOLD == 0:
-        current_level += 1
-        level_module = load_level(current_level)
-        obstacle_speed = get_obstacle_speed(level_module)
-        try:
-            background_image = pygame.image.load(get_level_background(level_module)).convert()
-        except Exception as e:
-            print(f"Error loading level background: {e}")
-            background_image = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
-            background_image.fill(BACKGROUND_COLOR)
-        return current_level, level_module, obstacle_speed, background_image
-    return current_level, None, PIPE_SPEED, None
+def main():
+    """Main function to run the game."""
+    # Initialize Pygame
+    pygame.init()
 
-# Load high score function
-def load_high_score():
-    try:
-        with open(HIGH_SCORE_FILE, 'r') as f:
-            score = f.read().strip()
-            return int(score) if score.isdigit() else 0
-    except (FileNotFoundError, ValueError):
-        return 0
+    # Game window setup
+    screen = init_game_window()
+    clock = pygame.time.Clock()
 
-# Initialize Pygame
-pygame.init()
+    # Initialize Scrolling Background
+    background = ScrollingBackground()
 
-# Load initial level
-current_level = STARTING_LEVEL  # Starting with level 1
-try:
-    level_module = load_level(current_level)
-except Exception as e:
-    print(f"Error loading level {current_level}: {e}")
-    level_module = None  # Fallback to None if level loading fails
+    # Display the Star Wars-style intro
+    star_wars_intro(screen)
 
-# Game window setup with error handling
-try:
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-except Exception as e:
-    print(f"Error initializing game window: {e}")
-    screen = pygame.display.set_mode((800, 600))  # Fallback to default resolution
+    # Load game font
+    font = load_game_font()
 
-pygame.display.set_caption(WINDOW_TITLE)
-clock = pygame.time.Clock()
-
-# Display the Star Wars-style intro
-star_wars_intro(screen)
-
-# Load assets safely with error handling
-try:
-    background_image = pygame.image.load(BACKGROUND_IMAGE).convert()
-except Exception as e:
-    print(f"Error loading background image: {e}")
-    background_image = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
-    background_image.fill(BACKGROUND_COLOR)
-
-# Bird (Player) setup
-bird = Bird()
-
-# Obstacles setup
-obstacles = []
-try:
-    obstacle_speed = get_obstacle_speed(level_module)
-except Exception as e:
-    print(f"Error getting obstacle speed: {e}")
-    obstacle_speed = PIPE_SPEED  # Fallback to a default value
-
-# Quantum Elements setup
-quantum_element = None
-
-# Holocron setup
-try:
-    holocron = Holocron(WIDTH, HEIGHT)
-except Exception as e:
-    print(f"Error initializing Holocron: {e}")
-    holocron = None  # Fallback to None if initialization fails
-
-# Load high score safely
-try:
+    # Initialize game variables
+    current_level = STARTING_LEVEL
+    score = 0
     high_score = load_high_score()
-except Exception as e:
-    print(f"Error loading high score: {e}")
-    high_score = 0
+    bird = Bird()
 
-# Font setup with error handling
-try:
-    font = pygame.font.Font(None, FONT_SIZE)
-except Exception as e:
-    print(f"Error loading font: {e}")
-    font = pygame.font.SysFont(None, FONT_SIZE)
-
-# Thread Pool Executor
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)  # Adjust the number of workers as needed
-
-def quantum_event_task(bird, quantum_element):
+    # Load level configuration
     try:
-        bird.velocity = handle_quantum_event(bird.rect, quantum_element, bird.velocity)
+        level_config = load_level(current_level)
     except Exception as e:
-        print(f"Error in quantum event task: {e}")
+        logging.error(f"Failed to load level {current_level}: {e}")
+        pygame.quit()
+        sys.exit()
 
-# Function to read and display story text
-def display_story_text(line_number):
-    try:
-        story_text = read_story_text('story.txt', line_number)
-        draw_text(story_text, font, WHITE, WIDTH // 4, HEIGHT // 4, screen)
+    # Initialize obstacles
+    obstacles = add_initial_obstacles(level_config, current_level)
+
+    # Initialize quantum elements
+    quantum_elements = []  # Separate list for quantum elements
+
+    # Initialize Holocron
+    holocron = Holocron(WIDTH, HEIGHT) if Holocron else None
+
+    # Initialize thread pool executor for handling quantum events
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+
+    # Get quantum probability from level config
+    QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.1)  # Default to 0.1 if not set
+
+    running = True
+    story_line = 0
+
+    # Main game loop
+    while running:
+        clock.tick(FPS)
+
+        # Update background
+        background.update()
+        background.draw(screen)
+
+        # Event handling
+        running = handle_events(bird, screen)
+
+        # Update bird
+        bird.update()
+
+        # Handle quantum events
+        if quantum_elements:
+            for quantum_element in quantum_elements:
+                executor.submit(quantum_event_task, bird, quantum_element)
+
+        # Quantum Elements Spawning Logic
+        if random.random() < QUANTUM_PROBABILITY:
+            quantum_element = spawn_quantum_element(level_config, WIDTH, HEIGHT)
+            if quantum_element:
+                quantum_elements.append(quantum_element)
+                logging.debug("Quantum element spawned.")
+
+        # Update and draw obstacles
+        update_obstacles(level_config, obstacles, score, current_level)
+        draw_game_elements(screen, bird, obstacles, quantum_elements, holocron)
+
+        # Handle game mechanics
+        check_holocron_collection(bird, holocron)
+        random_dark_side_event(obstacles, bird, screen)  # Pass bird and screen if needed
+        random_jedi_training(screen, bird)
+        random_hyperspace_event(bird)
+
+        # Check collisions
+        if check_collisions(bird, obstacles, quantum_elements):
+            handle_collision(bird)
+            update_leaderboard(score, high_score)
+            running = False
+
+        # Level progression
+        current_level, background, level_config = handle_level_progression(
+            score,
+            current_level,
+            background,
+            screen,
+            obstacles,
+            level_config  # Pass the current level_config
+        )
+
+        # Update QUANTUM_PROBABILITY if a new level was loaded
+        if level_config:
+            QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.1)  # Update with new level's probability
+
+        # Update score
+        score += 1
+
+        # Draw HUD
+        draw_hud(screen, font, score, high_score)
+
+        # Update display
         pygame.display.flip()
-        pygame.time.wait(3000)
-    except Exception as e:
-        print(f"Error displaying story text: {e}")
 
-# Function to draw obstacles
-def draw_obstacles():
+        # Check if bird is off-screen
+        if bird.rect.y > HEIGHT or bird.rect.y < 0:
+            update_leaderboard(score, high_score)
+            running = False
+
+    # Shut down executor and quit
+    executor.shutdown(wait=True)
+    pygame.quit()
+
+
+def init_game_window():
+    """Initializes the game window."""
     try:
-        for obstacle in obstacles:
-            if isinstance(obstacle, pygame.Rect):
-                pygame.draw.rect(screen, PIPE_COLOR, obstacle)
-            else:
-                print(f"Invalid obstacle detected: {obstacle}")
-    except Exception as e:
-        print(f"Error drawing obstacles: {e}")
+        if FULLSCREEN:
+            screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
+        else:
+            screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        logging.info("Game window initialized successfully.")
+    except pygame.error as e:
+        logging.error(f"Error initializing game window: {e}")
+        screen = pygame.display.set_mode((800, 600))  # Fallback resolution
+    pygame.display.set_caption(WINDOW_TITLE)
+    return screen
 
-# Function to draw quantum elements
-def draw_quantum_element(element):
+
+def load_game_font():
+    """Loads the game font."""
     try:
-        if element:
-            if element.type == 'black_hole':
-                color = BLACK
-                radius = BLACK_HOLE_RADIUS
-            else:
-                color = PURPLE
-                radius = AURORA_RADIUS
-            pygame.draw.circle(screen, color, element.rect.center, radius)
-    except Exception as e:
-        print(f"Error drawing quantum element: {e}")
+        font = pygame.font.Font(None, FONT_SIZE)
+        logging.info("Game font loaded successfully.")
+        return font
+    except pygame.error as e:
+        logging.error(f"Error loading font: {e}")
+        return pygame.font.SysFont(None, FONT_SIZE)
 
-# Function to draw text on the screen
-def draw_text(text, font, color, x, y):
-    try:
-        text_surface = font.render(text, True, color)
-        screen.blit(text_surface, (x, y))
-    except Exception as e:
-        print(f"Error drawing text: {e}")
 
-# Function to handle Holocron collection
-def check_holocron_collection():
-    try:
-        if holocron and holocron.collect(bird.rect):
-            if bird.shield_active:
-                activate_force_shield(bird.rect)
-            elif bird_ability == 'Laser':
-                activate_force_lightning(obstacles)
-            elif bird_ability == 'Speed':
-                bird.velocity += 2
-    except Exception as e:
-        print(f"Error handling Holocron collection: {e}")
-
-# Function to trigger random Dark Side events
-def random_dark_side_event():
-    try:
-        if np.random.randint(0, 100) < 5:  # 5% chance to trigger
-            if dark_side_choice():
-                global obstacle_speed
-                obstacle_speed += 2
-            else:
-                activate_force_shield(bird.rect)
-    except Exception as e:
-        print(f"Error triggering Dark Side event: {e}")
-
-# Function to trigger random Jedi Training events
-def random_jedi_training():
-    try:
-        if np.random.randint(0, 100) < 15:  # 15% chance to trigger
-            if jedi_training(screen, WIDTH, HEIGHT, GREEN):
-                activate_force_shield(bird.rect)
-            else:
-                bird.velocity += GRAVITY * 2
-    except Exception as e:
-        print(f"Error triggering Jedi Training event: {e}")
-
-# Function to trigger the Death Star battle
-def trigger_death_star_battle():
-    try:
-        if current_level == 3:  # Example condition
-            death_star_battle(screen, bird.rect)
-    except Exception as e:
-        print(f"Error triggering Death Star battle: {e}")
-
-# Function to trigger random hyperspace events
-def random_hyperspace_event():
-    try:
-        if np.random.randint(0, 100) < 5:  # 5% chance to trigger
-            pass  # Implement hyperspace jump functionality here
-    except Exception as e:
-        print(f"Error triggering hyperspace event: {e}")
-
-# Main game loop
-running = True
-story_line = 0  # Initialize the story line number
-score = 0
-
-while running:
-    clock.tick(FPS)
-    screen.blit(background_image, (0, 0))
-
-    # Update bird position and state
-    bird.update()
-
-    # Event handling
+def handle_events(bird, screen):
+    """Handles user input and events."""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            logging.info("Quit event detected.")
+            return False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and not bird.is_flapping:
                 bird.flap()
-            elif event.key == pygame.K_a:
-                activate_special_ability()
+            elif event.key == pygame.K_s:
+                if not bird.shield_active and bird.shield_duration == 0:
+                    bird.apply_power_up("shield")
+            elif event.key == pygame.K_l:
+                if not bird.lightsaber_active:
+                    bird.apply_power_up("lightsaber")
+    return True
 
-    # Submit quantum event handling task to the thread pool
+
+def activate_special_ability(bird):
+    """
+    Activates the bird's special ability based on current ability type.
+    For example: shield, laser, speed boost.
+    """
+    ability = bird.get_current_ability()  # Ensure this method exists in Bird class
+    logging.info(f"Activating special ability: {ability}")
+    if ability == 'Shield':
+        bird.apply_power_up("shield")
+    elif ability == 'Laser':
+        activate_force_lightning(bird.rect)
+    elif ability == 'Speed':
+        bird.speed_boost()  # Ensure this method exists in Bird class
+    else:
+        logging.warning(f"Unknown ability: {ability}")
+
+
+def quantum_event_task(bird, quantum_element):
+    """Handles quantum events in a separate thread."""
     try:
-        executor.submit(quantum_event_task, bird, quantum_element)
+        updated_velocity = handle_quantum_event(bird, quantum_element, bird.velocity)
+        bird.velocity = updated_velocity
+        logging.debug("Quantum event handled successfully.")
     except Exception as e:
-        print(f"Error submitting quantum event task: {e}")
+        logging.error(f"Error in quantum event task: {e}")
 
-    # Draw obstacles, quantum elements, and other gameplay elements
+
+def update_obstacles(level_config, obstacles, score, current_level):
+    """Updates obstacle positions and spawns new obstacles as needed."""
+    for obstacle in obstacles:
+        if hasattr(obstacle, 'update'):
+            obstacle.update()
+        else:
+            logging.error(f"Obstacle {obstacle} does not have an 'update' method.")
+    
+    # Spawn new obstacles based on spawn rate
+    if score % PIPE_SPAWN_RATE == 0 and score != 0:
+        add_obstacle(level_config, obstacles, WIDTH)
+        logging.debug("New obstacle spawned.")
+
+
+def draw_game_elements(screen, bird, obstacles, quantum_elements, holocron):
+    """Draws all game elements on the screen."""
+    bird.draw(screen)
+    draw_obstacles(screen, obstacles)
+    draw_quantum_elements(screen, quantum_elements)
+    if holocron:
+        holocron.draw(screen)
+    # Draw additional elements like UI overlays if needed
+
+
+def draw_obstacles(screen, obstacles):
+    """Draws all obstacles on the screen."""
+    for obstacle in obstacles:
+        obstacle.draw(screen)
+
+
+def draw_quantum_elements(screen, quantum_elements):
+    """Draws all quantum elements on the screen."""
+    for element in quantum_elements:
+        if hasattr(element, 'draw'):
+            element.draw(screen)
+
+
+def check_collisions(bird, obstacles, quantum_elements):
+    """Checks for collisions with obstacles and quantum elements."""
+    collision = False
+    for obstacle in obstacles:
+        if hasattr(obstacle, 'rect') and bird.rect.colliderect(obstacle.rect):
+            logging.info("Collision detected with obstacle.")
+            collision = True
+            break
+    if not collision:
+        for element in quantum_elements:
+            if hasattr(element, 'rect') and bird.rect.colliderect(element.rect):
+                logging.info("Collision detected with quantum element.")
+                collision = True
+                break
+    return collision
+
+
+def handle_collision(bird):
+    """Handles the collision event."""
+    bird.is_flapping = False
+    bird.velocity = 0
+    # Implement additional collision handling like reducing lives, playing sounds, etc.
+    logging.info("Handled collision: Bird stopped flapping and velocity reset.")
+
+
+def draw_hud(screen, font, score, high_score):
+    """Draws the Heads-Up Display (HUD) on the screen."""
+    draw_text(f"Score: {score}", font, BLUE, 10, 10, screen)
+    draw_text(f"High Score: {high_score}", font, RED, 10, 50, screen)
+    # Add more HUD elements like lives, power-up indicators, etc.
+
+
+def update_leaderboard(score, high_score):
+    """Updates the leaderboard with the current score."""
+    if score > high_score:
+        logging.info(f"New high score achieved: {score}")
+        save_high_score(score)
+
+
+def save_high_score(score):
+    """Saves the new high score to a file."""
     try:
-        draw_obstacles()
-        draw_quantum_element(quantum_element)
-        if holocron:
-            holocron.draw(screen)
-    except Exception as e:
-        print(f"Error drawing game elements: {e}")
+        with open(HIGH_SCORE_FILE, 'w') as f:
+            f.write(str(score))
+        logging.info("High score saved successfully.")
+    except IOError as e:
+        logging.error(f"Error saving high score: {e}")
 
-    # Quantum-enhanced events
+
+def load_high_score():
+    """Loads the high score from a file."""
     try:
-        check_holocron_collection()
-        random_dark_side_event()
-        random_jedi_training()
-        random_hyperspace_event()
+        with open(HIGH_SCORE_FILE, 'r') as f:
+            score = f.read().strip()
+            high_score = int(score) if score.isdigit() else 0
+            logging.info(f"High score loaded: {high_score}")
+            return high_score
+    except FileNotFoundError:
+        # Create the file if it doesn't exist
+        with open(HIGH_SCORE_FILE, 'w') as f:
+            f.write('0')
+        logging.warning(f"High score file not found. Created new file at {HIGH_SCORE_FILE}. Setting high score to 0.")
+        return 0
     except Exception as e:
-        print(f"Error handling quantum-enhanced events: {e}")
+        logging.warning(f"Error loading high score: {e}. Setting high score to 0.")
+        return 0
 
-    # Handle collisions and level progression
-    try:
-        if any(bird.rect.colliderect(obstacle) for obstacle in obstacles) or (quantum_element and bird.rect.colliderect(quantum_element.rect)):
-            bird.is_flapping = False
-            bird.velocity = 0
-            quantum_element = spawn_quantum_element(level_module, WIDTH, HEIGHT)
-    except Exception as e:
-        print(f"Error handling collision or level progression: {e}")
 
-    # Death Star battle at specific levels
-    try:
-        trigger_death_star_battle()
-    except Exception as e:
-        print(f"Error triggering Death Star battle: {e}")
-
-    # Display the story text at the start of each level
-    if score % LEVEL_THRESHOLD == 0 and score != 0:
-        try:
-            story_line += 1
-            display_story_text(story_line)
-        except Exception as e:
-            print(f"Error displaying story text: {e}")
-
-    # Draw bird
-    try:
-        bird.draw(screen)
-    except Exception as e:
-        print(f"Error drawing bird: {e}")
-
-    # Draw score and high score
-    try:
-        draw_text(f"Score: {score}", font, BLUE, 10, 10)
-        draw_text(f"High Score: {high_score}", font, RED, 10, 50)
-    except Exception as e:
-        print(f"Error drawing score text: {e}")
-
-    # Check if the bird hits the ground or goes off-screen
-    if bird.rect.y > HEIGHT or bird.rect.y < 0:
-        try:
-            def update_leaderboard(score):
-                # Implement leaderboard update functionality here
-                return False  # Example return value
-
-            if update_leaderboard(score):
-                high_score = score  # Update in-game high score if new record
-        except Exception as e:
-            print(f"Error updating leaderboard: {e}")
-        running = False
-
-    # Update the display
-    pygame.display.flip()
-
-    # Score update and level progression
-    try:
-        score += 1
-        current_level, level_module, obstacle_speed, new_background_image = handle_level_progression(score, current_level)
-        if new_background_image:
-            background_image = new_background_image
-    except Exception as e:
-        print(f"Error updating score or progressing level: {e}")
-
-# Shut down the executor
-try:
-    executor.shutdown(wait=True)
-except Exception as e:
-    print(f"Error shutting down executor: {e}")
-
-# End game
-pygame.quit()
+if __name__ == "__main__":
+    main()

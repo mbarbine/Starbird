@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from modules.settings import *
 class BossBattle:
     def __init__(self, boss_image_path):
         self.image = pygame.image.load(boss_image_path)

@@ -1,12 +1,12 @@
 import pygame
 import sys
 import numpy as np  # Import NumPy for efficient calculations
-from bird import Bird
-from pipe import Pipe
-from backgrounds import ScrollingBackground
-from settings import *
-from q_blackhole import QBlackHole
-from q_aurorabor import AuroraBorealis
+from modules.bird import Bird
+from modules.pipe import Pipe
+from modules.backgrounds import ScrollingBackground
+from modules.settings import *
+from modules.q_blackhole import QBlackHole
+from modules.q_aurorabor import AuroraBorealis
 
 class Laser:
     def __init__(self, x, y):

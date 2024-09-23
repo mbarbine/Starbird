@@ -1,5 +1,5 @@
 import random
-from settings import *
+from modules.settings import *
 def apply_dual_flap(bird_velocity):
     # Randomly decide between a strong or weak flap
     if random.choice([True, False]):

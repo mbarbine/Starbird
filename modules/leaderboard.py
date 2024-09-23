@@ -1,5 +1,5 @@
 # leaderboard.py
-from settings import *
+from modules.settings import *
 
 
 def load_high_score(file_path='assets/highscore.txt'):

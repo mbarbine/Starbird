@@ -1,7 +1,7 @@
 import os
 from modules.text_effects import render_star_wars_text
 import markdown
-from settings import *
+from modules.settings import *
 def read_story_text(filename, line_number):
     """
     Reads a specific line from the story text file.

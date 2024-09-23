@@ -1,6 +1,6 @@
 import pygame
 import random
-from settings import *
+from modules.settings import *
 
 def starship_flyby(screen):
     starship_image = pygame.image.load('assets/starship.png')

@@ -2,11 +2,19 @@
     "level1": {
         "obstacle_speed": 5,
         "gap_size": 200,
-        "background": "../assets/background.png"
+        "background": "../assets/background.png",
+        "obstacle_type": "pipe",
+        "quantum_probability": 0.1,
+        "quantum_element": "QBlackHole",
+        "num_obstacles": 6
     },
     "level2": {
         "obstacle_speed": 7,
         "gap_size": 180,
-        "background": "../assets/background.png"
+        "background": "../assets/background.png",
+        "obstacle_type": "pipe",
+        "quantum_probability": 0.15,
+        "quantum_element": "AuroraBorealis",
+        "num_obstacles": 8
     }
 }

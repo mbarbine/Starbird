@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from modules.settings import *
 def lightsaber_duel(event):
     success = False
     if event.key == pygame.K_LEFT:

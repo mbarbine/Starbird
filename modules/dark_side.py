@@ -1,9 +1,10 @@
 import pygame
 import random
-from settings import *
+from modules.settings import *
 
 
 def dark_side_choice():
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))  # Define the screen
     font = pygame.font.Font(None, 40)
     prompt = "Do you embrace the Dark Side? (Y/N)"
     text_surface = font.render(prompt, True, RED)

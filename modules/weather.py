@@ -1,1 +1,1 @@
-from settings import *
+from modules.settings import *

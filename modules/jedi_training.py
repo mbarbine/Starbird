@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from modules.settings import *
 def jedi_training(screen, width, height, color_green):
     font = pygame.font.Font(None, 50)
     prompt = "Press the sequence: W, A, S, D"

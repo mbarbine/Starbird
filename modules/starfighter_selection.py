@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from modules.settings import *
 class Starfighter:
     def __init__(self, image_path, ability):
         self.image = pygame.image.load(image_path)

@@ -1,5 +1,5 @@
 import pygame
-from settings import *
+from modules.settings import *
 
 def play_lightsaber_sound():
     pygame.mixer.init()

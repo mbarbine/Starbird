@@ -1,5 +1,5 @@
 import subprocess
-from settings import *
+from modules.settings import *
 def quantum_decision():
     # Compile and execute the CUDA Q decision kernel
     subprocess.run(['nvcc', '--cuda', 'quantum_decision.cu', '-o', 'quantum_decision'])
