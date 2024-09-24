@@ -26,27 +26,27 @@ class Bird:
                 img.fill(BIRD_COLOR)
 
         self.current_frame = 0
-        self.animation_speed = 0.1
+        self.animation_speed = 10  # Frames per second for animation
         self.image = self.images[self.current_frame]
         self.rect = self.image.get_rect()
         self.rect.x = BIRD_START_X
         self.rect.y = BIRD_START_Y
 
         # Movement properties
-        self.velocity = 0.0
-        self.acceleration = GRAVITY
+        self.velocity = 0.0  # pixels per second
+        self.acceleration = GRAVITY  # pixels per second squared
         self.air_resistance = AIR_RESISTANCE
-        self.max_velocity = MAX_VELOCITY
+        self.max_velocity = MAX_VELOCITY  # pixels per second
         self.rotation_angle = 0
         self.is_flapping = False
-        self.flap_cooldown = 0
-        self.flap_cooldown_time = FLAP_COOLDOWN_TIME
+        self.flap_cooldown = 0  # frames remaining
+        self.flap_cooldown_time = FLAP_COOLDOWN_TIME  # frames
 
         # Abilities and power-ups
         self.shield_active = False
-        self.shield_duration = 0  # Frames remaining for the shield
+        self.shield_duration = 0  # frames remaining for the shield
         self.pulse_offset = 0  # For shield pulsing effect
-        self.laser_cooldown = LASER_COOLDOWN_TIME
+        self.laser_cooldown = LASER_COOLDOWN_TIME  # frames
         self.lightsaber_active = False
         self.lightsaber_color = GREEN  # Default lightsaber color (green)
         self.lightsaber_length = 50  # Length of the lightsaber
@@ -58,41 +58,43 @@ class Bird:
         self.superposition_active = False
         self.entanglement_linked = False
 
-    def update(self):
+    def update_with_dt(self, dt):
         """
-        Updates the bird's position, velocity, and handles animations.
+        Updates the bird's position, velocity, and handles animations based on delta time.
         Should be called every frame.
         """
-        # Apply gravity and air resistance
-        self.velocity += self.acceleration
+        # Apply gravity and air resistance scaled by delta time
+        self.velocity += self.acceleration * dt
         self.velocity *= self.air_resistance
         self.velocity = max(min(self.velocity, self.max_velocity), -self.max_velocity)
-        self.rect.y += int(self.velocity)
+        self.rect.y += self.velocity * dt  # Correct position update without scaling
 
         # Rotate bird based on velocity
-        self.rotation_angle = max(-45, min(self.velocity * 2, 45))
+        self.rotation_angle = max(-45, min(self.velocity * 3, 45))  # Adjust rotation scaling
         rotated_image = pygame.transform.rotate(
             self.images[int(self.current_frame)], self.rotation_angle
         )
         self.image = rotated_image
         self.rect = self.image.get_rect(center=self.rect.center)  # Keep the bird centered
 
-        # Update animation frame
-        self.current_frame += self.animation_speed * (1 + abs(self.velocity) / 10)
+        # Update animation frame based on animation speed
+        self.current_frame += self.animation_speed * dt
         if self.current_frame >= len(self.images):
             self.current_frame = 0
 
         # Flap cooldown
         if self.flap_cooldown > 0:
-            self.flap_cooldown -= 1
+            self.flap_cooldown -= 1  # Reduce cooldown by 1 frame
+            if self.flap_cooldown <= 0:
+                self.is_flapping = False  # Reset flapping flag
 
         # Laser cooldown
         if self.laser_cooldown > 0:
-            self.laser_cooldown -= 1
+            self.laser_cooldown -= 1  # Reduce cooldown by 1 frame
 
         # Shield management
         if self.shield_active:
-            self.shield_duration -= 1
+            self.shield_duration -= 1  # Reduce duration by 1 frame
             self.pulse_offset += 1
             if self.shield_duration <= 0:
                 self.shield_active = False
@@ -118,8 +120,8 @@ class Bird:
         """
         Makes the bird flap, giving it an upward velocity boost.
         """
-        if self.flap_cooldown == 0:
-            self.velocity = FLAP_STRENGTH * (1 + abs(self.velocity) * 0.1)
+        if self.flap_cooldown <= 0:
+            self.velocity = FLAP_STRENGTH  # Set velocity to flap strength
             self.is_flapping = True
             self.flap_cooldown = self.flap_cooldown_time
             logging.debug("Bird flapped.")

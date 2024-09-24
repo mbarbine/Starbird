@@ -44,11 +44,11 @@ PIPE_VARIANT_COLORS = [
 ]  # Variety of green shades
 
 # Physics Settings
-GRAVITY = 0.3  # Reduced gravity for smoother bird movement
-FLAP_STRENGTH = -12  # Stronger flap for bird
-AIR_RESISTANCE = 0.96  # Reduced air resistance for smoother control
-MAX_VELOCITY = 15  # Reduced max velocity for bird to prevent excessive speed
-FLAP_COOLDOWN_TIME = 8  # Reduced cooldown for flapping
+GRAVITY = 400  # Increased gravity for noticeable downward acceleration
+FLAP_STRENGTH = -300  # Increased flap strength for a significant upward boost
+AIR_RESISTANCE = 0.95  # Slightly increased air resistance for smoother control
+MAX_VELOCITY = 1000  # Increased max velocity to accommodate higher gravity and flap strength
+FLAP_COOLDOWN_TIME = 15  # Increased cooldown to prevent excessive flapping
 BOOST_MULTIPLIER = 2.0  # Stronger boost effect
 
 # Bird Settings
@@ -163,26 +163,18 @@ HOLOCRON_COLOR = (255, 215, 0)  # Color of holocron
 
 # Event Frequency Settings
 EVENT_FREQUENCY = {
-    'jedi_training': 0.003,       # Probability per frame (0.3%)
-    'dark_side': 0.015,            # Probability per frame (1.5%)
-    'hyperspace': 0.015,           # Probability per frame (1.5%)
-    'holocron_spawn_rate': 0.005,  # Probability per frame (0.5%)
+    'jedi_training': 0.005,       # Probability per frame (0.5%)
+    'dark_side': 0.02,            # Probability per frame (2%)
+    'hyperspace': 0.005,          # Probability per frame (0.5%)
+    'holocron_spawn_rate': 0.001, # Probability per frame (0.1%)
 }
 
 # Event Cooldown Settings (in frames)
 EVENT_COOLDOWNS = {
-    'jedi_training': 450,   # 7.5 seconds at 60 FPS (adjusted for FPS=30: 7.5s * 30 = 225 frames)
-    'dark_side': 900,       # 15 seconds at 60 FPS (adjusted for FPS=30: 15s * 30 = 450 frames)
-    'hyperspace': 1350,     # 22.5 seconds at 60 FPS (adjusted for FPS=30: 22.5s * 30 = 675 frames)
-    'holocron': 2250,       # 37.5 seconds at 60 FPS (adjusted for FPS=30: 37.5s * 30 = 1125 frames)
-}
-
-# Adjusted for FPS=30
-EVENT_COOLDOWNS = {
-    'jedi_training': 225,   # 7.5 seconds at 30 FPS
-    'dark_side': 450,       # 15 seconds at 30 FPS
-    'hyperspace': 675,      # 22.5 seconds at 30 FPS
-    'holocron': 1125,       # 37.5 seconds at 30 FPS
+    'jedi_training': 600,   # 20 seconds at 30 FPS
+    'dark_side': 1200,      # 40 seconds at 30 FPS
+    'hyperspace': 900,      # 30 seconds at 30 FPS
+    'holocron': 1500,       # 50 seconds at 30 FPS
 }
 
 # Initialize Event Timers

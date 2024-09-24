@@ -1,4 +1,4 @@
-# main_2.py
+# main.py
 
 import pygame
 import sys
@@ -55,6 +55,7 @@ def start_screen(screen, font):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                logging.info("Quit event detected on Start Screen.")
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
@@ -77,12 +78,15 @@ def game_over_screen(screen, font, score, high_scores):
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                logging.info("Quit event detected on Game Over Screen.")
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == settings.CONTROL_SETTINGS['retry_key']:
+                    logging.info("Retry key pressed. Restarting game.")
                     main()  # Restart the game
                 elif event.key == settings.CONTROL_SETTINGS['quit_key']:
+                    logging.info("Quit key pressed on Game Over Screen.")
                     pygame.quit()
                     sys.exit()
 
@@ -96,10 +100,12 @@ def pause_game(screen, font):
     while paused:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                logging.info("Quit event detected while game is paused.")
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == settings.CONTROL_SETTINGS['pause_key']:
+                    logging.info("Resume key pressed. Resuming game.")
                     paused = False
 
 def main():
@@ -184,17 +190,18 @@ Prepare for an epic adventure across the galaxy."""
 
     # Main game loop
     while running:
-        clock.tick(settings.FPS)  # Control the game speed to match FPS
+        dt = clock.tick(settings.FPS) / 1000  # Delta time in seconds
 
         # Update background
-        background.update()
+        background.update(dt)
         background.draw(screen)
 
         # Event handling
-        running = handle_events(bird, screen, flap_sound, shield_sound, lightsaber_sound, font)
+        running = handle_events(bird, screen, flap_sound, shield_sound, lightsaber_sound, font, dt)
 
         # Update bird
-        bird.update()
+        bird.update_with_dt(dt)
+        bird.is_flapping = False  # Reset flapping flag to allow next flap
 
         # Handle quantum events
         if quantum_elements:
@@ -209,7 +216,7 @@ Prepare for an epic adventure across the galaxy."""
                 logging.debug("Quantum element spawned.")
 
         # Update and draw obstacles
-        update_obstacles(level_config, obstacles, score, current_level)
+        update_obstacles_with_dt(level_config, obstacles, score, current_level, dt)
         draw_game_elements(screen, bird, obstacles, quantum_elements)
 
         # Handle game mechanics with cooldowns
@@ -370,8 +377,16 @@ def load_game_font():
         logging.error(f"Error loading font: {e}")
         return pygame.font.SysFont(None, settings.FONT_SIZE)
 
-def handle_events(bird, screen, flap_sound, shield_sound, lightsaber_sound, font):
+def handle_events(bird, screen, flap_sound, shield_sound, lightsaber_sound, font, dt):
     """Handles user input and events."""
+    keys = pygame.key.get_pressed()
+    
+    # Handle continuous flapping
+    if keys[settings.CONTROL_SETTINGS['flap_key']]:
+        if not bird.is_flapping and bird.flap_cooldown <= 0:
+            bird.flap()
+            flap_sound.play()  # Play flap sound
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             logging.info("Quit event detected.")
@@ -379,18 +394,18 @@ def handle_events(bird, screen, flap_sound, shield_sound, lightsaber_sound, font
             sys.exit()
         elif event.type == pygame.KEYDOWN:
             if event.key == settings.CONTROL_SETTINGS['pause_key']:
+                logging.info("Pause key pressed. Pausing game.")
                 pause_game(screen, font)
-            elif event.key == settings.CONTROL_SETTINGS['flap_key'] and not bird.is_flapping:
-                bird.flap()
-                flap_sound.play()  # Play flap sound
             elif event.key == settings.CONTROL_SETTINGS['shield_key']:
-                if not bird.shield_active and bird.shield_duration == 0:
+                if not bird.shield_active and bird.shield_duration <= 0:
                     bird.apply_power_up("shield")
                     shield_sound.play()  # Play shield activation sound
+                    logging.info("Shield key pressed. Shield activated.")
             elif event.key == settings.CONTROL_SETTINGS['lightsaber_key']:
                 if not bird.lightsaber_active:
                     bird.apply_power_up("lightsaber")
                     lightsaber_sound.play()  # Play lightsaber sound
+                    logging.info("Lightsaber key pressed. Lightsaber activated.")
     return True  # Continue running
 
 def activate_special_ability(bird):
@@ -416,13 +431,15 @@ def quantum_event_task(bird, quantum_element):
     except Exception as e:
         logging.error(f"Error in quantum event task: {e}")
 
-def update_obstacles(level_config, obstacles, score, current_level):
-    """Updates obstacle positions and spawns new obstacles as needed."""
+def update_obstacles_with_dt(level_config, obstacles, score, current_level, dt):
+    """Updates obstacle positions and spawns new obstacles as needed, considering delta time."""
     for obstacle in obstacles:
-        if hasattr(obstacle, 'update'):
+        if hasattr(obstacle, 'update_with_dt'):
+            obstacle.update_with_dt(dt)
+        elif hasattr(obstacle, 'update'):
             obstacle.update()
         else:
-            logging.error(f"Obstacle {obstacle} does not have an 'update' method.")
+            logging.error(f"Obstacle {obstacle} does not have an 'update' or 'update_with_dt' method.")
 
     spawn_interval = level_config.get('pipe_spawn_rate_frames', settings.PIPE_SPAWN_RATE_FRAMES)
     if score % spawn_interval == 0 and score != 0:
@@ -438,13 +455,18 @@ def draw_game_elements(screen, bird, obstacles, quantum_elements):
 def draw_obstacles(screen, obstacles):
     """Draws all obstacles on the screen."""
     for obstacle in obstacles:
-        obstacle.draw(screen)
+        if hasattr(obstacle, 'draw'):
+            obstacle.draw(screen)
+        else:
+            logging.error(f"Obstacle {obstacle} does not have a 'draw' method.")
 
 def draw_quantum_elements(screen, quantum_elements):
     """Draws all quantum elements on the screen."""
     for element in quantum_elements:
         if hasattr(element, 'draw'):
             element.draw(screen)
+        else:
+            logging.error(f"Quantum element {element} does not have a 'draw' method.")
 
 def check_collisions(bird, obstacles, quantum_elements):
     """Checks for collisions with obstacles and quantum elements."""
@@ -486,6 +508,8 @@ def draw_hud(screen, font, score, high_scores, bird, control_display_timer, curr
     active_ability = bird.get_current_ability()
     if active_ability:
         draw_text(f"Ability: {active_ability}", font, settings.CYAN, 10, 170, screen)
+    # Display current velocity for debugging
+    draw_text(f"Velocity: {bird.velocity:.2f}", font, settings.WHITE, 10, 210, screen)
     if pygame.time.get_ticks() - control_display_timer < settings.CONTROL_DISPLAY_TIME:
         draw_text("Space: Flap, S: Shield, L: Lightsaber, P: Pause", font, settings.WHITE, 10, settings.HEIGHT - 50, screen)
 
