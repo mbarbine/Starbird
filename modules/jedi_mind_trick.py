@@ -16,9 +16,6 @@ def activate_jedi_mind_trick(obstacles, duration=2):
         top_obstacle.x += 100  # Move them back on-screen
         bottom_obstacle.x += 100
 
-
-\\ integration 
-
 from jedi_mind_trick import activate_jedi_mind_trick
 
 def random_power_up():

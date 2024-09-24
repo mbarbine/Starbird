@@ -1,13 +1,35 @@
+# modules/force_lightning.py
+
 import pygame
-from modules.settings import *
+from modules.settings import WHITE, FPS
+import logging
 
-def activate_force_lightning(obstacles):
-    for top_obstacle, bottom_obstacle in obstacles:
-        if top_obstacle.colliderect(bird) or bottom_obstacle.colliderect(bird):
-            top_obstacle.height = 0
-            bottom_obstacle.height = 0
-            pygame.draw.line(screen, WHITE, bird.center, top_obstacle.midbottom, 2)
-            pygame.draw.line(screen, WHITE, bird.center, bottom_obstacle.midtop, 2)
-            pygame.display.flip()
+def activate_force_lightning(bird, obstacles, screen, duration=3):
+    """
+    Activates a lightning effect around the bird, destroying obstacles upon collision.
 
+    Args:
+        bird (Bird): The bird object to affect.
+        obstacles (list): List of current obstacle objects.
+        screen (pygame.Surface): The Pygame screen surface.
+        duration (int, optional): Duration of the lightning effect in seconds. Defaults to 3.
+    """
+    bird.lightsaber_active = True
+    logging.info("Lightning activated.")
 
+    lightning_duration = duration * FPS  # Convert seconds to frames
+
+    while lightning_duration > 0:
+        for obstacle in obstacles:
+            if obstacle.top_rect.colliderect(bird.rect) or obstacle.bottom_rect.colliderect(bird.rect):
+                obstacle.top_rect.height = 0
+                obstacle.bottom_rect.height = 0
+                # Draw lightning lines
+                pygame.draw.line(screen, WHITE, bird.rect.center, obstacle.top_rect.midbottom, 2)
+                pygame.draw.line(screen, WHITE, bird.rect.center, obstacle.bottom_rect.midtop, 2)
+        pygame.display.flip()
+        lightning_duration -= 1
+        pygame.time.delay(int(1000 / FPS))  # Delay to match FPS
+
+    bird.lightsaber_active = False
+    logging.info("Lightning deactivated.")

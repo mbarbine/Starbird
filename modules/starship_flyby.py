@@ -14,10 +14,6 @@ def starship_flyby(screen):
         pygame.display.flip()
         pygame.time.wait(10)
 
-
-\\ integration 
-
-
 from starship_flyby import starship_flyby
 
 def random_visual_effect():

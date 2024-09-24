@@ -4,18 +4,18 @@ import subprocess
 import ctypes
 from modules.quantum_flap import apply_quantum_flap
 from modules.hyperspace_jump import activate_hyperspace_jump
-from quantum_decision import quantum_decision
-from physics import apply_gravity_gpu
-from starfighter_selection import select_starfighter
-from force_lightning import activate_force_lightning
-from force_shield import activate_force_shield
-from holocron import Holocron
-from dark_side import dark_side_choice
-from jedi_training import jedi_training
-from death_star import death_star_battle
-from level_loader import load_level, get_level_background, get_obstacle_speed, add_obstacle, spawn_quantum_element
+from modules.quantum_decision import quantum_decision
+from modules.physics import apply_gravity_gpu
+from modules.starfighter_selection import select_starfighter
+from modules.force_lightning import activate_force_lightning
+from modules.force_shield import activate_force_shield
+from modules.holocron import Holocron
+from modules.dark_side import dark_side_choice
+from modules.jedi_training import jedi_training
+from modules.level_loader import load_level, get_level_background, get_obstacle_speed, add_obstacle, spawn_quantum_element
+from modules.death_star import death_star_battle
 from modules.settings import *
-from story import read_story_text
+from modules.story import read_story_text
 
 # Initialize Pygame
 pygame.init()

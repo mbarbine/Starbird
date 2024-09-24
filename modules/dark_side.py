@@ -1,46 +1,34 @@
+# modules/dark_side.py
+
 import pygame
-import random
-from modules.settings import *
+import logging
+from modules.settings import WIDTH, HEIGHT, RED
 
+def dark_side_choice(screen):
+    """
+    Presents a Dark Side choice to the player.
 
-def dark_side_choice():
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))  # Define the screen
+    Args:
+        screen (pygame.Surface): The Pygame screen surface.
+
+    Returns:
+        bool: True if the player chooses to increase obstacle speed, False otherwise.
+    """
     font = pygame.font.Font(None, 40)
-    prompt = "Do you embrace the Dark Side? (Y/N)"
+    prompt = "Choose Dark Side: Press 'D' to increase obstacle speed or any other key for shield."
     text_surface = font.render(prompt, True, RED)
-    screen.blit(text_surface, (WIDTH // 4, HEIGHT // 2))
+    screen.blit(text_surface, (WIDTH // 6, HEIGHT // 2))
     pygame.display.flip()
-    
-    decision_made = False
-    while not decision_made:
+
+    while True:
         for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_y:
-                    decision_made = True
+                if event.key == pygame.K_d:
+                    logging.info("Player chose Dark Side: Increased obstacle speed.")
                     return True
-                elif event.key == pygame.K_n:
-                    decision_made = True
+                else:
+                    logging.info("Player chose to activate Shield instead of Dark Side.")
                     return False
-    return False
-
-
-
-#\\ ntegration 
-
-
-#from dark_side import dark_side_choice
-
-#def random_dark_side_event():
-#    if random.randint(0, 100) < 5:  # 5% chance to trigger
-#        if dark_side_choice():
-#            # Dark Side powers
-#            obstacle_speed += 2
-#            activate_force_push(obstacles)
-#        else:
-#            # Light Side bonus
-#            activate_force_shield(bird)
-
-# Trigger random Dark Side temptation
-#random_dark_side_event()
-
-

@@ -2,8 +2,9 @@
 
 import pygame
 import numpy as np
-from modules.settings import *
+from modules.settings import *  # Import all necessary settings
 import logging
+import random
 
 class Bird:
     """
@@ -14,7 +15,16 @@ class Bird:
     def __init__(self):
         """Initializes the bird with default properties."""
         # Load bird animation frames
-        self.images = [pygame.image.load(frame).convert_alpha() for frame in BIRD_FRAMES]
+        try:
+            self.images = [pygame.image.load(frame).convert_alpha() for frame in BIRD_FRAMES]
+            logging.info("Bird animation frames loaded successfully.")
+        except pygame.error as e:
+            logging.error(f"Error loading bird frames: {e}")
+            # Create placeholder images in case loading fails
+            self.images = [pygame.Surface((BIRD_WIDTH, BIRD_HEIGHT)) for _ in BIRD_FRAMES]
+            for img in self.images:
+                img.fill(BIRD_COLOR)
+
         self.current_frame = 0
         self.animation_speed = 0.1
         self.image = self.images[self.current_frame]
@@ -38,7 +48,7 @@ class Bird:
         self.pulse_offset = 0  # For shield pulsing effect
         self.laser_cooldown = LASER_COOLDOWN_TIME
         self.lightsaber_active = False
-        self.lightsaber_color = (0, 255, 0)  # Default lightsaber color (green)
+        self.lightsaber_color = GREEN  # Default lightsaber color (green)
         self.lightsaber_length = 50  # Length of the lightsaber
 
         # Visual properties

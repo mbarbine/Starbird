@@ -2,7 +2,7 @@
 
 import pygame
 import time
-from modules.settings import BLUE
+from modules.settings import BLUE, FPS
 import logging
 
 def activate_force_shield(bird, screen, duration=3):
@@ -16,6 +16,11 @@ def activate_force_shield(bird, screen, duration=3):
     """
     bird.shield_active = True
     bird.shield_duration = duration * FPS  # Convert seconds to frames
+    logging.info("Force shield activated.")
 
-    # Optionally, you can add visual effects or sounds here
-    logging.info("Shield activated.")
+    # Optional: Add visual effects or sounds here
+    # For example, play a shield sound
+    # pygame.mixer.Sound('assets/shield.wav').play()
+
+    # Visual effect: Draw a shield immediately
+    # Note: The actual drawing should be handled in the Bird's draw method

@@ -1,99 +1,106 @@
-# components/level_loader.py
+# modules/level_loader.py
 
-import importlib
-import json
-import os
+import pygame
 import logging
-from modules.pipe import Pipe  # Adjusted import path
-from settings import PIPE_WIDTH, GAP_SIZE, PIPE_SPEED, HEIGHT, WIDTH
-
-LEVEL_CONFIG_DIR = os.path.join(os.path.dirname(__file__), '..', 'levels')
+import random  # Import random for selecting pipe colors
+from modules.settings import WIDTH, HEIGHT, PIPE_HEIGHT, PIPE_VARIANT_COLORS, PIPE_SPEED, PIPE_GAP, LEVEL_THRESHOLD  # Import necessary constants
+from modules.pipe import Pipe
+from modules.holocron import Holocron  # Assuming Holocron is defined in your project
 
 def load_level(level_number):
     """
-    Loads the configuration for the specified level from a JSON file.
+    Loads the level configuration based on the level number.
 
     Args:
-        level_number (int): The number of the level to load.
+        level_number (int): The current level number.
 
     Returns:
-        dict: Configuration data for the specified level.
-
-    Raises:
-        FileNotFoundError: If the level configuration file is not found.
-        KeyError: If the specified level does not exist in the configuration file.
-        json.JSONDecodeError: If there is an error parsing the JSON file.
+        dict: Level configuration settings.
     """
-    config_path = os.path.join(LEVEL_CONFIG_DIR, 'level_config.json')
-    
-    try:
-        with open(config_path, 'r') as file:
-            config = json.load(file)
-    except FileNotFoundError:
-        raise FileNotFoundError(f"Level configuration file not found at {config_path}. Please check the path.")
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Error parsing JSON file at {config_path}: {e}")
-    
-    level_key = f"level{level_number}"
-    
-    try:
-        return config[level_key]
-    except KeyError:
-        raise KeyError(f"Level {level_number} does not exist in the configuration file.")
+    # Placeholder implementation: Define level configurations manually
+    level_configs = {
+        1: {
+            'background_path': 'assets/background_level1.png',
+            'pipe_spawn_rate_frames': 90,
+            'pipe_speed': 5,
+            'quantum_probability': 0.01,
+        },
+        2: {
+            'background_path': 'assets/background_level2.png',
+            'pipe_spawn_rate_frames': 80,
+            'pipe_speed': 6,
+            'quantum_probability': 0.015,
+        },
+        # Add more levels as needed
+    }
 
-def add_initial_obstacles(level_config, level_number=None):
+    if level_number in level_configs:
+        logging.info(f"Level {level_number} loaded.")
+        return level_configs[level_number]
+    else:
+        logging.warning(f"Level {level_number} not found. Loading default level.")
+        return level_configs[1]
+
+def get_level_background(level_config):
     """
-    Adds initial obstacles based on the current level configuration.
+    Retrieves the background path from the level configuration.
 
     Args:
-        level_config (dict): Configuration data for the level.
-        level_number (int, optional): Current level number. Defaults to None.
+        level_config (dict): The level configuration.
 
     Returns:
-        list: List of obstacle objects.
+        str: Path to the background image.
+    """
+    return level_config.get('background_path', 'assets/background.png')
+
+def add_initial_obstacles(level_config):
+    """
+    Adds initial obstacles based on the level configuration.
+
+    Args:
+        level_config (dict): The level configuration.
+
+    Returns:
+        list: List of initial Pipe objects.
     """
     obstacles = []
-    obstacle_speed = level_config.get('obstacle_speed', PIPE_SPEED)
-    obstacle_type = level_config.get('obstacle_type', 'pipe')
-    num_obstacles = level_config.get('num_obstacles', 3)
+    pipe_speed = level_config.get('pipe_speed', PIPE_SPEED)  # Use default PIPE_SPEED if not in level config
 
-    for _ in range(num_obstacles):
-        if obstacle_type == 'pipe':
-            obstacle = Pipe(WIDTH, obstacle_speed, GAP_SIZE)
-            obstacles.append(obstacle)
-            logging.info("New pipe obstacle added.")
-        else:
-            logging.warning(f"Unsupported obstacle type: {obstacle_type}. Skipping.")
-    
-    logging.info(f"Level {level_number} loaded with {len(obstacles)} obstacles.") if level_number else None
+    for i in range(3):  # Starting with 3 pipes
+        x = WIDTH + i * 300
+        pipe = Pipe(x, pipe_speed, PIPE_GAP)
+        obstacles.append(pipe)
+
     return obstacles
+
+def add_obstacle(level_config, obstacles, screen_width):
+    """
+    Adds a new pair of obstacles.
+
+    Args:
+        level_config (dict): The level configuration.
+        obstacles (list): Existing list of obstacles.
+        screen_width (int): Width of the game screen.
+    """
+    pipe_speed = level_config.get('pipe_speed', PIPE_SPEED)
+    pipe = Pipe(screen_width, pipe_speed, PIPE_GAP)
+    obstacles.append(pipe)
 
 def spawn_quantum_element(level_config, screen_width, screen_height):
     """
-    Spawns a quantum element based on the level configuration.
+    Spawns a quantum element based on probability.
 
     Args:
-        level_config (dict): The configuration data for the level.
-        screen_width (int): The width of the screen.
-        screen_height (int): The height of the screen.
+        level_config (dict): The level configuration.
+        screen_width (int): Width of the game screen.
+        screen_height (int): Height of the game screen.
 
     Returns:
-        object: A quantum element object or None if not specified.
+        QuantumElement or None: The spawned quantum element or None if not spawned.
     """
-    quantum_element_type = level_config.get('quantum_element', None)
-
-    if not quantum_element_type:
-        return None
-
-    try:
-        quantum_module = importlib.import_module(f'modules.quantum_elements.{quantum_element_type}')
-        if hasattr(quantum_module, 'create_quantum_element'):
-            return quantum_module.create_quantum_element(screen_width, screen_height)
-        else:
-            logging.error(f"Module '{quantum_element_type}' does not have 'create_quantum_element' function.")
-    except ImportError as e:
-        logging.error(f"Error loading quantum element module '{quantum_element_type}': {e}")
-    
+    quantum_probability = level_config.get('quantum_probability', 0.01)
+    if random.random() < quantum_probability:
+        return Holocron(screen_width, screen_height)
     return None
 
 def handle_level_progression(score, current_level, background, screen, obstacles, level_config):
@@ -101,96 +108,41 @@ def handle_level_progression(score, current_level, background, screen, obstacles
     Handles level progression based on the score.
 
     Args:
-        score (int): Current game score.
+        score (int): Current score.
         current_level (int): Current level number.
-        background (ScrollingBackground): Current background object.
-        screen (pygame.Surface): Pygame screen surface.
+        background (ScrollingBackground): The background object.
+        screen (pygame.Surface): The game screen.
         obstacles (list): List of current obstacles.
         level_config (dict): Current level configuration.
 
     Returns:
-        tuple: (updated_level_number, updated_background, updated_level_config)
+        tuple: Updated (current_level, background, level_config)
     """
-    LEVEL_THRESHOLD = 100  # Adjust as needed
-
-    if score > 0 and score % LEVEL_THRESHOLD == 0:
+    if score != 0 and score % LEVEL_THRESHOLD == 0:
         current_level += 1
         logging.info(f"Progressing to level {current_level}.")
-        
         try:
             new_level_config = load_level(current_level)
-        except (FileNotFoundError, KeyError, ValueError) as e:
+        except Exception as e:
             logging.error(f"Failed to load level {current_level}: {e}")
-            # Retain the existing level_config if loading fails
             return current_level, background, level_config
-        
-        new_obstacles = add_initial_obstacles(new_level_config)
-        obstacles.extend(new_obstacles)
-        logging.info(f"Added {len(new_obstacles)} new obstacles for level {current_level}.")
 
-        # Update background based on new level
+        new_obstacles = add_initial_obstacles(new_level_config)
+        if new_obstacles:
+            obstacles.extend(new_obstacles)
+            logging.info(f"Added {len(new_obstacles)} new obstacles for level {current_level}.")
+
         new_background_path = get_level_background(new_level_config)
-        background.load_new_background(new_background_path)
-        logging.info(f"Background updated for level {current_level}.")
+        if new_background_path:
+            background.load_new_background(new_background_path)
+            logging.info(f"Background updated for level {current_level}.")
+
+        # Increase difficulty
+        global PIPE_SPEED
+        PIPE_SPEED += 0.5  # Increase speed by 0.5 each level
+        global PIPE_SPAWN_RATE_FRAMES
+        PIPE_SPAWN_RATE_FRAMES = max(30, new_level_config.get('pipe_spawn_rate_frames', 30) - 10)  # Adjust spawn rate
 
         return current_level, background, new_level_config
-    
-    return current_level, background, level_config
-
-def add_initial_obstacles(level_config):
-    """
-    Adds initial obstacles based on the current level configuration.
-
-    Args:
-        level_config (dict): Configuration data for the level.
-
-    Returns:
-        list: List of obstacle objects.
-    """
-    obstacles = []
-    obstacle_speed = level_config.get('obstacle_speed', PIPE_SPEED)
-    obstacle_type = level_config.get('obstacle_type', 'pipe')
-    num_obstacles = level_config.get('num_obstacles', 3)
-
-    for _ in range(num_obstacles):
-        if obstacle_type == 'pipe':
-            obstacle = Pipe(WIDTH, obstacle_speed, GAP_SIZE)
-            obstacles.append(obstacle)
-            logging.info("New pipe obstacle added.")
-        else:
-            logging.warning(f"Unsupported obstacle type: {obstacle_type}. Skipping.")
-    
-    logging.info(f"Level loaded with {len(obstacles)} obstacles.")
-    return obstacles
-
-def add_obstacle(level_config, obstacles, screen_width):
-    """
-    Adds a single obstacle to the obstacles list based on level configuration.
-
-    Args:
-        level_config (dict): Configuration data for the level.
-        obstacles (list): List of current obstacles.
-        screen_width (int): Width of the game screen.
-    """
-    obstacle_speed = level_config.get('obstacle_speed', PIPE_SPEED)
-    obstacle_type = level_config.get('obstacle_type', 'pipe')
-    
-    if obstacle_type == 'pipe':
-        obstacle = Pipe(screen_width, obstacle_speed, GAP_SIZE)
-        obstacles.append(obstacle)
-        logging.info("New pipe obstacle added.")
     else:
-        logging.warning(f"Unknown obstacle type: {obstacle_type}. No obstacle added.")
-
-def get_level_background(level_config):
-    """
-    Retrieves the background image path for the level.
-
-    Args:
-        level_config (dict): Configuration data for the level.
-
-    Returns:
-        str: Path to the background image.
-    """
-    default_background = os.path.join(os.path.dirname(__file__), '..', 'assets', 'background.png')
-    return level_config.get('background', default_background)
+        return current_level, background, level_config

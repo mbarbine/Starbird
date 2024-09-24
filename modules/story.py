@@ -1,67 +1,68 @@
-import os
-from modules.text_effects import render_star_wars_text
-import markdown
-from modules.settings import *
-def read_story_text(filename, line_number):
+# modules/story.py
+
+import pygame
+import logging
+from modules.settings import WIDTH, HEIGHT, BLACK, YELLOW
+
+def star_wars_intro(text, screen):
     """
-    Reads a specific line from the story text file.
+    Displays the Star Wars-style scrolling intro text.
+
+    Args:
+        text (str): The intro text to render.
+        screen (pygame.Surface): The Pygame screen surface to render on.
+    """
+    font = pygame.font.Font(None, 40)
+    lines = text.split('\n')
+    y_offset = HEIGHT
+    line_height = font.get_linesize()
+
+    running = True
+    while running and y_offset > -len(lines) * line_height:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key in [pygame.K_SPACE, pygame.K_RETURN]:
+                    running = False
+
+        screen.fill(BLACK)
+        for i, line in enumerate(lines):
+            text_surface = font.render(line, True, YELLOW)
+            screen.blit(text_surface, (WIDTH // 4, y_offset + i * line_height))
+
+        y_offset -= 4
+        pygame.display.flip()
+        pygame.time.wait(10)
+
+    # Clear the screen after the intro
+    screen.fill(BLACK)
+    pygame.display.flip()
+
+def read_story_text(filename):
+    """
+    Reads the story text from the file and parses it into a dictionary of levels.
 
     Args:
         filename (str): The path to the story text file.
-        line_number (int): The line number to read.
 
     Returns:
-        str: The content of the specified line.
+        dict: A dictionary where each key is a level and the value is the story text for that level.
     """
+    story_dict = {}
+    current_level = ""
     try:
         with open(filename, 'r') as file:
-            lines = file.readlines()
-            if line_number < len(lines):
-                return lines[line_number].strip()
-            else:
-                return "Line not found."
+            for line in file:
+                line = line.strip()
+                if line.startswith("# Level"):
+                    current_level = line
+                    story_dict[current_level] = ""
+                elif current_level:
+                    story_dict[current_level] += line + "\n"
     except FileNotFoundError:
-        return f"File {filename} not found."
+        logging.error(f"File {filename} not found.")
     except Exception as e:
-        return f"Error reading file: {e}"
-
-def star_wars_intro(screen):
-    """
-    Renders the Star Wars-style intro text on the screen.
-    
-    Args:
-        screen (pygame.Surface): The Pygame screen surface to render on.
-    """
-    # Assuming main.py and README.md are in the same directory
-    readme_path = os.path.join(os.path.dirname(__file__), '../README.md')
-    intro_text = read_markdown_section(readme_path, 'Overview')
-    if intro_text:
-        render_star_wars_text(intro_text, screen)
-    else:
-        print("Overview section not found in README.md")
-
-def read_markdown_section(filename, section_title):
-    """
-    Reads a specific section from a markdown file and returns its content.
-    
-    Args:
-        filename (str): The path to the markdown file.
-        section_title (str): The title of the section to extract.
-
-    Returns:
-        str: The content of the section, or a message if not found.
-    """
-    try:
-        with open(filename, 'r') as file:
-            content = file.read()
-            md = markdown.Markdown(extensions=['meta'])
-            html_content = md.convert(content)
-            sections = html_content.split('<h1>')
-            for section in sections:
-                if section_title in section:
-                    return section
-        return "Section not found."
-    except FileNotFoundError:
-        return f"File {filename} not found."
-    except Exception as e:
-        return f"Error reading markdown file: {e}"
+        logging.error(f"Error reading file: {e}")
+    return story_dict
