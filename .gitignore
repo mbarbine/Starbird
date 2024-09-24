@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+modules/quantum_elements/__pycache__/*
+modules/quantum_elements/__pycache__/
+*.pyc
 
 # C extensions
 *.so

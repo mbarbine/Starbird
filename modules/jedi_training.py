@@ -1,9 +1,10 @@
 # modules/jedi_training.py
 
 import pygame
-from modules.settings import WIDTH, HEIGHT, GREEN
+from modules.settings import WIDTH, HEIGHT, COLORS
 import logging
 import sys
+
 def jedi_training(screen):
     """
     Prompts the player to press a specific key sequence (W, A, S, D) to pass Jedi training.
@@ -16,7 +17,7 @@ def jedi_training(screen):
     """
     font = pygame.font.Font(None, 50)
     prompt = "Jedi Training: Press W, A, S, D in sequence"
-    text_surface = font.render(prompt, True, GREEN)
+    text_surface = font.render(prompt, True, COLORS['GREEN'])
     screen.blit(text_surface, (WIDTH // 4, HEIGHT // 2 - 100))
     pygame.display.flip()
 

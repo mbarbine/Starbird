@@ -1,7 +1,7 @@
 # modules/force_lightning.py
 
 import pygame
-from modules.settings import WHITE, FPS
+from modules.settings import COLORS, FPS  # Import the COLORS dictionary and FPS
 import logging
 
 def activate_force_lightning(bird, obstacles, screen, duration=3):
@@ -18,6 +18,7 @@ def activate_force_lightning(bird, obstacles, screen, duration=3):
     logging.info("Lightning activated.")
 
     lightning_duration = duration * FPS  # Convert seconds to frames
+    white_color = COLORS['WHITE']  # Retrieve the WHITE color from the COLORS dictionary
 
     while lightning_duration > 0:
         for obstacle in obstacles:
@@ -25,8 +26,8 @@ def activate_force_lightning(bird, obstacles, screen, duration=3):
                 obstacle.top_rect.height = 0
                 obstacle.bottom_rect.height = 0
                 # Draw lightning lines
-                pygame.draw.line(screen, WHITE, bird.rect.center, obstacle.top_rect.midbottom, 2)
-                pygame.draw.line(screen, WHITE, bird.rect.center, obstacle.bottom_rect.midtop, 2)
+                pygame.draw.line(screen, white_color, bird.rect.center, obstacle.top_rect.midbottom, 2)
+                pygame.draw.line(screen, white_color, bird.rect.center, obstacle.bottom_rect.midtop, 2)
         pygame.display.flip()
         lightning_duration -= 1
         pygame.time.delay(int(1000 / FPS))  # Delay to match FPS

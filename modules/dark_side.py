@@ -2,7 +2,7 @@
 
 import pygame
 import logging
-from modules.settings import WIDTH, HEIGHT, RED
+from modules.settings import WIDTH, HEIGHT, COLORS
 
 def dark_side_choice(screen):
     """
@@ -16,7 +16,7 @@ def dark_side_choice(screen):
     """
     font = pygame.font.Font(None, 40)
     prompt = "Choose Dark Side: Press 'D' to increase obstacle speed or any other key for shield."
-    text_surface = font.render(prompt, True, RED)
+    text_surface = font.render(prompt, True, COLORS['RED'])
     screen.blit(text_surface, (WIDTH // 6, HEIGHT // 2))
     pygame.display.flip()
 

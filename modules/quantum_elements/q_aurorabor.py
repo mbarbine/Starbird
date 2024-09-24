@@ -4,7 +4,7 @@ import os
 import pygame
 import random
 import logging
-from modules.settings import AURORA_RADIUS, HEIGHT
+from modules.settings import QUANTUM_SETTINGS, HEIGHT
 
 def create_quantum_element(screen_width, screen_height):
     """
@@ -41,8 +41,8 @@ class AuroraBorealis:
         except pygame.error as e:
             logging.error(f"Failed to load AuroraBorealis image from {image_path}: {e}")
             # Use a placeholder image if loading fails
-            self.image = pygame.Surface((AURORA_RADIUS, AURORA_RADIUS))
-            self.image.fill((0, 255, 0))  # Green square as a placeholder
+            self.image = pygame.Surface((QUANTUM_SETTINGS['aurora_radius'], QUANTUM_SETTINGS['aurora_radius']))
+            self.image.fill(QUANTUM_SETTINGS['aurora_color'])  # Color the placeholder with aurora color
 
         self.rect = self.image.get_rect()
         self.rect.x = screen_width

@@ -31,7 +31,7 @@ from modules.quantum_flap import apply_quantum_flap
 from modules.sound_utils import (
     load_sound,
     play_background_music,
-    set_volume_levels
+    play_sound_effect
 )
 from modules.event_handler import handle_events
 from modules.screen_utils import draw_hud, start_screen, game_over_screen, pause_game
@@ -66,7 +66,7 @@ def main():
     clock = pygame.time.Clock()
 
     # Start playing background music immediately
-    play_background_music(settings.BACKGROUND_MUSIC)
+    play_background_music()
 
     # Initialize Scrolling Background
     background = ScrollingBackground()
@@ -114,14 +114,13 @@ Prepare for an epic adventure across the galaxy."""
     # Get quantum probability from level config
     QUANTUM_PROBABILITY = level_config.get('quantum_probability', 0.01)
 
-    # Load sound effects and set volumes
+    # Load sound effects
     sound_effects = {
-        'flap': load_sound(settings.FLAP_SOUND),
-        'collision': load_sound(settings.HIT_SOUND),
-        'shield': load_sound(settings.SHIELD_SOUND),
-        'lightsaber': load_sound(settings.LASER_SOUND)
+        'flap': load_sound('FLAP'),
+        'collision': load_sound('HIT'),
+        'shield': load_sound('SHIELD'),
+        'lightsaber': load_sound('LASER')
     }
-    set_volume_levels(sound_effects, settings.SFX_VOLUME)
 
     running = True
 
@@ -204,7 +203,6 @@ Prepare for an epic adventure across the galaxy."""
     executor.shutdown(wait=True)
     pygame.quit()
 
-
 def update_score(bird, obstacles, score):
     """Updates the score based on obstacles passed."""
     for obstacle in obstacles:
@@ -213,7 +211,6 @@ def update_score(bird, obstacles, score):
             obstacle.passed = True  # Mark obstacle as passed
             logging.info(f"Score updated: {score}")
     return score
-
 
 if __name__ == "__main__":
     main()
