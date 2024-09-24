@@ -3,7 +3,7 @@
 import pygame
 from modules.settings import WIDTH, HEIGHT, GREEN
 import logging
-
+import sys
 def jedi_training(screen):
     """
     Prompts the player to press a specific key sequence (W, A, S, D) to pass Jedi training.

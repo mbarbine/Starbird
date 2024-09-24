@@ -1,4 +1,4 @@
-# bird.py
+# modules/bird.py
 
 import pygame
 import numpy as np

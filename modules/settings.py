@@ -1,6 +1,7 @@
 # modules/settings.py
 
-import os  # Import the os module
+import os
+import pygame  # Ensure pygame is imported for key constants
 
 # Screen Settings
 WIDTH = 800
@@ -8,7 +9,7 @@ HEIGHT = 600
 WINDOW_HEIGHT = HEIGHT  # Alias for HEIGHT to maintain compatibility
 FULLSCREEN = False
 WINDOW_TITLE = "Starbird: Quantum Edition"
-FPS = 75  # Increased FPS for smoother gameplay
+FPS = 30  # Reduced FPS for slower, more manageable gameplay
 
 # Colors
 YELLOW = (255, 255, 0)
@@ -31,11 +32,11 @@ TEXT_HIGHLIGHT_COLOR = (255, 223, 0)  # Gold highlight
 
 # Game Settings
 LEVEL_THRESHOLD = 1000  # Threshold for level progression
-PIPE_SPAWN_RATE_FRAMES = 90  # Pipe spawn rate in frames (90 frames at 75 FPS = 1.2 seconds)
+PIPE_SPAWN_RATE_FRAMES = 120  # Pipe spawn rate in frames (120 frames at 30 FPS = 4 seconds)
 PIPE_WIDTH = 90
 PIPE_HEIGHT = 600
 PIPE_GAP = 180  # Wider gap for better gameplay
-PIPE_SPEED = 5  # Speed of pipes
+PIPE_SPEED = 3  # Reduced speed of pipes for easier navigation
 PIPE_VARIANT_COLORS = [
     (34, 139, 34),
     (107, 142, 35),
@@ -43,10 +44,10 @@ PIPE_VARIANT_COLORS = [
 ]  # Variety of green shades
 
 # Physics Settings
-GRAVITY = 0.6  # Adjusted gravity
+GRAVITY = 0.3  # Reduced gravity for smoother bird movement
 FLAP_STRENGTH = -12  # Stronger flap for bird
 AIR_RESISTANCE = 0.96  # Reduced air resistance for smoother control
-MAX_VELOCITY = 20  # Increased max velocity for bird
+MAX_VELOCITY = 15  # Reduced max velocity for bird to prevent excessive speed
 FLAP_COOLDOWN_TIME = 8  # Reduced cooldown for flapping
 BOOST_MULTIPLIER = 2.0  # Stronger boost effect
 
@@ -99,11 +100,12 @@ FLAP_SOUND = 'sounds/flap.wav'  # Sound for flapping
 SCORE_SOUND = 'sounds/score.wav'  # Sound for scoring
 HIT_SOUND = 'sounds/hit.wav'  # Sound for collision
 LASER_SOUND = 'sounds/laser.wav'  # Sound for laser
+SHIELD_SOUND = 'sounds/shield.wav'  # Sound for shield activation
 BACKGROUND_MUSIC = 'sounds/background_music.wav'  # Background music
 MUSIC_VOLUME = 0.4  # Volume for music
 SFX_VOLUME = 0.6  # Volume for sound effects
 MUSIC_FADEOUT_TIME = 500  # Fadeout time for music
-SHIELD_SOUND = 'sounds/flap.wav'
+
 # Mandelbrot Settings
 MANDELBROT_MAX_ITER = 150
 MANDELBROT_ZOOM = 200
@@ -158,3 +160,48 @@ AURORABOREALIS_SIZE = 60  # Size of aurora borealis element
 AURORABOREALIS_COLOR = CYAN  # Color of aurora borealis element
 HOLOCRON_SIZE = 40  # Size of holocron
 HOLOCRON_COLOR = (255, 215, 0)  # Color of holocron
+
+# Event Frequency Settings
+EVENT_FREQUENCY = {
+    'jedi_training': 0.003,       # Probability per frame (0.3%)
+    'dark_side': 0.015,            # Probability per frame (1.5%)
+    'hyperspace': 0.015,           # Probability per frame (1.5%)
+    'holocron_spawn_rate': 0.005,  # Probability per frame (0.5%)
+}
+
+# Event Cooldown Settings (in frames)
+EVENT_COOLDOWNS = {
+    'jedi_training': 450,   # 7.5 seconds at 60 FPS (adjusted for FPS=30: 7.5s * 30 = 225 frames)
+    'dark_side': 900,       # 15 seconds at 60 FPS (adjusted for FPS=30: 15s * 30 = 450 frames)
+    'hyperspace': 1350,     # 22.5 seconds at 60 FPS (adjusted for FPS=30: 22.5s * 30 = 675 frames)
+    'holocron': 2250,       # 37.5 seconds at 60 FPS (adjusted for FPS=30: 37.5s * 30 = 1125 frames)
+}
+
+# Adjusted for FPS=30
+EVENT_COOLDOWNS = {
+    'jedi_training': 225,   # 7.5 seconds at 30 FPS
+    'dark_side': 450,       # 15 seconds at 30 FPS
+    'hyperspace': 675,      # 22.5 seconds at 30 FPS
+    'holocron': 1125,       # 37.5 seconds at 30 FPS
+}
+
+# Initialize Event Timers
+EVENT_TIMERS = {
+    'jedi_training': 0,
+    'dark_side': 0,
+    'hyperspace': 0,
+    'holocron': 0,
+}
+
+# Control Settings
+CONTROL_SETTINGS = {
+    'flap_key': pygame.K_SPACE,
+    'shield_key': pygame.K_s,
+    'lightsaber_key': pygame.K_l,
+    'pause_key': pygame.K_p,
+    'retry_key': pygame.K_r,
+    'quit_key': pygame.K_q,
+}
+
+# HUD Settings
+CONTROL_DISPLAY_TIME = 100  # Time in milliseconds to display control instructions

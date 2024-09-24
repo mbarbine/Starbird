@@ -1,6 +1,9 @@
 import pygame
 import time
 from modules.settings import *
+import os
+import sys
+
 def activate_jedi_mind_trick(obstacles, duration=2):
     hidden_obstacles = []
 
