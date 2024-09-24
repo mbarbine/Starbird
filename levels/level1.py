@@ -1,18 +1,19 @@
 # levels/level1.py
+
 import pygame
 import random
+import logging
 from quantum_effects import QuantumElement
-from modules.pipe import Pipe  # Ensure Pipe is imported
+from modules.pipe import Pipe
+from modules.settings import PIPE_SPEED, PIPE_GAP, BLACK_HOLE_RADIUS, AURORA_RADIUS, HEIGHT
 
 # Level-specific configurations
 LEVEL_BACKGROUND = 'assets/level1_bg.png'
-OBSTACLE_SPEED = 3
-QUANTUM_PROBABILITY = 0.1
-BLACK_HOLE_RADIUS = 40
-AURORA_RADIUS = 50
-GAP_SIZE = 180  # Ensure this matches your settings
+OBSTACLE_SPEED = PIPE_SPEED  # Use PIPE_SPEED from settings
+GAP_SIZE = PIPE_GAP  # Use PIPE_GAP from settings
+QUANTUM_PROBABILITY = 0.1  # Can override from settings if needed
 
-def add_obstacle(obstacles, width, height, gap_size=GAP_SIZE):
+def add_obstacle(obstacles, width, height=HEIGHT, gap_size=GAP_SIZE):
     """Creates and appends a new Pipe instance to the obstacles list."""
     top_height = random.randint(50, height - gap_size - 50)
     bottom_height = height - gap_size - top_height
