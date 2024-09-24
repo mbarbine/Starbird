@@ -9,7 +9,7 @@ HEIGHT = 600
 WINDOW_HEIGHT = HEIGHT  # Alias for HEIGHT to maintain compatibility
 FULLSCREEN = False
 WINDOW_TITLE = "Starbird: Quantum Edition"
-FPS = 30  # Reduced FPS for slower, more manageable gameplay
+FPS = 60  # Increased FPS for smoother gameplay
 
 # Colors
 YELLOW = (255, 255, 0)
@@ -32,7 +32,7 @@ TEXT_HIGHLIGHT_COLOR = (255, 223, 0)  # Gold highlight
 
 # Game Settings
 LEVEL_THRESHOLD = 1000  # Threshold for level progression
-PIPE_SPAWN_RATE_FRAMES = 120  # Pipe spawn rate in frames (120 frames at 30 FPS = 4 seconds)
+PIPE_SPAWN_RATE_FRAMES = 120  # Pipe spawn rate in frames (120 frames at 60 FPS = 2 seconds)
 PIPE_WIDTH = 90
 PIPE_HEIGHT = 600
 PIPE_GAP = 180  # Wider gap for better gameplay
@@ -44,10 +44,10 @@ PIPE_VARIANT_COLORS = [
 ]  # Variety of green shades
 
 # Physics Settings
-GRAVITY = 400  # Increased gravity for noticeable downward acceleration
-FLAP_STRENGTH = -300  # Increased flap strength for a significant upward boost
-AIR_RESISTANCE = 0.95  # Slightly increased air resistance for smoother control
-MAX_VELOCITY = 1000  # Increased max velocity to accommodate higher gravity and flap strength
+GRAVITY = 0.5  # Adjusted gravity for natural descent (pixels per second squared)
+FLAP_STRENGTH = -10  # Adjusted flap strength for noticeable but controlled ascent (pixels per second)
+AIR_RESISTANCE = 0.98  # Slightly increased air resistance for smoother control
+MAX_VELOCITY = 15  # Adjusted max velocity to prevent excessive speed (pixels per second)
 FLAP_COOLDOWN_TIME = 15  # Increased cooldown to prevent excessive flapping
 BOOST_MULTIPLIER = 2.0  # Stronger boost effect
 
