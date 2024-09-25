@@ -1,3 +1,5 @@
+# modules/settings.py
+
 import os
 import pygame
 
@@ -69,7 +71,7 @@ FLAP_COOLDOWN_TIME = 12
 # -------------------------------
 # Bird Settings
 # -------------------------------
-BIRD_COLOR = (255, 215, 0) 
+BIRD_COLOR = COLORS['BIRD']
 BIRD_WIDTH = 80
 BIRD_HEIGHT = 42
 BIRD_START_X = 100
@@ -79,16 +81,19 @@ BIRD_FRAMES = [
     os.path.join('assets', 'bird2.png'),
     os.path.join('assets', 'bird3.png'),
 ]
-BIRD_MAX_LIVES = 100
+BIRD_MAX_LIVES = 3
 BIRD_RESPAWN_TIME = 60
 BIRD_INVINCIBILITY_FRAMES = 120
 
 # -------------------------------
 # Background Settings
 # -------------------------------
-BACKGROUND_IMAGE = 'background.png'
+BACKGROUND_IMAGE = os.path.join('assets', 'background.png')
 BACKGROUND_SCROLL_SPEED = 2
-BACKGROUND_LAYERS = ['layer1.png', 'layer2.png']
+BACKGROUND_LAYERS = [
+    os.path.join('assets', 'layer1.png'),
+    os.path.join('assets', 'layer2.png')
+]
 STAR_COUNT = 150
 STAR_COLOR = COLORS['WHITE']
 STAR_SPEED = 1
@@ -118,11 +123,13 @@ SOUNDS = {
 MUSIC_VOLUME = 0.75
 SFX_VOLUME = 0.8
 MUSIC_FADEOUT_TIME = 500
+
 # -------------------------------
 # Laser Settings
 # -------------------------------
 LASER_COOLDOWN_TIME = 60  # Time in frames for laser cooldown
-LASER_COLOR = (255, 215, 0)  # Example: gold color for lightsaber
+LASER_COLOR = COLORS['BIRD']  # Color of the laser, matching the bird color
+LIGHTSABER_COLOR = COLORS['GREEN']  # Defined color for the lightsaber
 LIGHTSABER_LENGTH = 100  # Example value for the length of the lightsaber
 
 # -------------------------------
@@ -217,10 +224,10 @@ HIGHSCORE_ENCRYPTION_KEY = 'supersecretkey'
 # Start Screen Color
 # -------------------------------
 START_SCREEN_COLOR = COLORS['START_SCREEN']
-BACKGROUND_MUSIC = 'background_music.wav'  # Ensure the correct path to the music file
-
+BACKGROUND_MUSIC = os.path.join('assets', 'sounds', 'background_music.wav')
 
 # -------------------------------
 # Animation Settings
 # -------------------------------
 ANIMATION_SPEED = 0.1  # Speed for bird animation
+AURORA_RADIUS = 50 

@@ -1,11 +1,8 @@
-# main.py
-
 import pygame
 import sys
-import concurrent.futures
 import logging
 import random
-import os
+import concurrent.futures
 from threading import Lock
 
 from modules.bird import Bird
@@ -16,7 +13,7 @@ from modules.holocron import Holocron
 from modules.dark_side import dark_side_choice
 from modules.jedi_training import jedi_training
 from modules.death_star import death_star_battle
-from modules.level_manager import (
+from modules.level_loader import (
     load_level,
     get_level_background,
     add_initial_obstacles,
@@ -30,8 +27,7 @@ from modules.backgrounds import ScrollingBackground
 from modules.quantum_flap import apply_quantum_flap
 from modules.sound_utils import (
     load_sound,
-    play_background_music,
-    play_sound_effect
+    play_background_music
 )
 from modules.event_handler import handle_events
 from modules.screen_utils import draw_hud, start_screen, game_over_screen, pause_game
@@ -41,13 +37,11 @@ from modules.game_utils import (
     load_game_font,
     update_obstacles_with_dt,
     draw_game_elements,
-    handle_game_mechanics,
-    update_leaderboard,
-    save_high_scores,
+    update_score,
     load_high_scores,
+    save_high_scores,
     get_player_name
 )
-from modules.quantum_handler import quantum_event_task
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -57,7 +51,6 @@ bird_lock = Lock()
 
 def main():
     """Main function to run the game."""
-    # Initialize Pygame
     pygame.init()
     pygame.mixer.init()
 
@@ -65,16 +58,16 @@ def main():
     screen = init_game_window()
     clock = pygame.time.Clock()
 
-    # Start playing background music immediately
-    play_background_music()
+    # Start playing background music
+    play_background_music(settings.BACKGROUND_MUSIC)
 
-    # Initialize Scrolling Background
+    # Initialize scrolling background
     background = ScrollingBackground()
 
     # Load game font
     font = load_game_font()
 
-    # Display the Start Screen
+    # Display the start screen
     start_screen(screen, font)
 
     # Display the Star Wars-style intro
@@ -143,12 +136,11 @@ Prepare for an epic adventure across the galaxy."""
 
         # Update bird
         bird.update_with_dt(dt)
-        bird.is_flapping = False
 
         # Handle quantum events
         if quantum_elements:
             for quantum_element in quantum_elements.copy():
-                executor.submit(quantum_event_task, bird, quantum_element)
+                executor.submit(apply_quantum_flap, bird, quantum_element)
 
         # Quantum Elements Spawning Logic
         if len(quantum_elements) < 1 and random.random() < QUANTUM_PROBABILITY:
@@ -160,14 +152,6 @@ Prepare for an epic adventure across the galaxy."""
         # Update and draw obstacles
         update_obstacles_with_dt(level_config, obstacles, score, current_level, dt)
         draw_game_elements(screen, bird, obstacles, quantum_elements)
-
-        # Handle game mechanics with cooldowns
-        handle_game_mechanics(screen, bird, obstacles, quantum_elements, event_timers)
-
-        # Decrement event timers
-        for event in event_timers:
-            if event_timers[event] > 0:
-                event_timers[event] -= 1
 
         # Check collisions
         if check_collisions(bird, obstacles, quantum_elements):
@@ -202,15 +186,6 @@ Prepare for an epic adventure across the galaxy."""
     # Shut down executor and quit
     executor.shutdown(wait=True)
     pygame.quit()
-
-def update_score(bird, obstacles, score):
-    """Updates the score based on obstacles passed."""
-    for obstacle in obstacles:
-        if bird.rect.x > obstacle.rect.x + obstacle.rect.width and not obstacle.passed:
-            score += 1
-            obstacle.passed = True  # Mark obstacle as passed
-            logging.info(f"Score updated: {score}")
-    return score
 
 if __name__ == "__main__":
     main()

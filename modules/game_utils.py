@@ -8,6 +8,7 @@ import modules.settings as settings
 from modules.jedi_training import jedi_training
 from modules.dark_side import dark_side_choice
 from modules.holocron import Holocron
+from modules.pipe import Pipe
 
 # Lock for thread safety when modifying bird attributes
 bird_lock = Lock()
@@ -15,7 +16,7 @@ bird_lock = Lock()
 def init_game_window():
     """Initializes the game window."""
     try:
-        screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT), 
+        screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT),
                                           pygame.FULLSCREEN if settings.FULLSCREEN else 0)
         logging.info("Game window initialized successfully.")
     except pygame.error as e:
@@ -58,7 +59,7 @@ def play_background_music(music_path):
             logging.error(f"Failed to play background music {full_path}: {e}")
     else:
         logging.error(f"Background music file {full_path} not found.")
-
+        
 def save_high_scores(high_scores):
     """Saves the high scores to a file."""
     try:
