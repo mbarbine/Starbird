@@ -59,7 +59,7 @@ def main():
     clock = pygame.time.Clock()
 
     # Start playing background music
-    play_background_music(settings.BACKGROUND_MUSIC)
+    play_background_music()  # Corrected to remove the argument
 
     # Initialize scrolling background
     background = ScrollingBackground()

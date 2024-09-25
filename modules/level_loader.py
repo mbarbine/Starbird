@@ -1,8 +1,16 @@
+# modules/level_loader.py
+
 import json
 import logging
 import os
 import random
-from modules.settings import PIPE_SPEED, PIPE_GAP, BLACK_HOLE_RADIUS, AURORA_RADIUS
+from modules.settings import (
+    PIPE_SPEED, PIPE_GAP, BLACK_HOLE_RADIUS, AURORA_RADIUS,
+    LEVEL_THRESHOLD, PIPE_SPAWN_RATE_FRAMES, PIPE_VARIANT_COLORS,
+    WIDTH, HEIGHT
+)
+from modules.pipe import Pipe
+from modules.backgrounds import ScrollingBackground
 
 def load_level(level_number):
     """
@@ -53,7 +61,7 @@ def default_level_config():
         'quantum_probability': 0.01,
         'quantum_element': 'QBlackHole',
         'gap_size': PIPE_GAP,
-        'pipe_variants': [(34, 139, 34), (107, 142, 35), (154, 205, 50)]  # Default pipe colors
+        'pipe_variants': PIPE_VARIANT_COLORS  # Use defined pipe colors
     }
 
 def get_level_background(level_config):
@@ -80,15 +88,16 @@ def add_initial_obstacles(level_config):
     """
     obstacles = []
     num_obstacles = level_config.get('num_obstacles', 3)
+    pipe_variants = level_config.get('pipe_variants', PIPE_VARIANT_COLORS)
+
     for i in range(num_obstacles):
-        obstacle = {
-            'type': level_config.get('obstacle_type', 'pipe'),
-            'x_position': i * 300 + 800,
-            'speed': level_config.get('obstacle_speed', PIPE_SPEED),
-            'gap_size': level_config.get('gap_size', PIPE_GAP),
-            'color': level_config.get('pipe_variants', [(34, 139, 34)])[i % 3]
-        }
-        obstacles.append(obstacle)
+        pipe = Pipe(
+            x=i * 300 + WIDTH,
+            speed=level_config.get('obstacle_speed', PIPE_SPEED),
+            pipe_gap=level_config.get('gap_size', PIPE_GAP)
+        )
+        pipe.color = pipe_variants[i % len(pipe_variants)]  # Use color variants cyclically
+        obstacles.append(pipe)
     logging.info(f"Added {num_obstacles} initial obstacles based on level configuration.")
     return obstacles
 
@@ -101,14 +110,13 @@ def add_obstacle(level_config, obstacles, screen_width):
         obstacles (list): List of existing obstacles.
         screen_width (int): Width of the screen to determine the placement of the new obstacle.
     """
-    new_obstacle = {
-        'type': level_config.get('obstacle_type', 'pipe'),
-        'x_position': screen_width,
-        'speed': level_config.get('obstacle_speed', PIPE_SPEED),
-        'gap_size': level_config.get('gap_size', PIPE_GAP),
-        'color': random.choice(level_config.get('pipe_variants', [(34, 139, 34)]))
-    }
-    obstacles.append(new_obstacle)
+    pipe = Pipe(
+        x=screen_width,
+        speed=level_config.get('obstacle_speed', PIPE_SPEED),
+        pipe_gap=level_config.get('gap_size', PIPE_GAP)
+    )
+    pipe.color = random.choice(level_config.get('pipe_variants', PIPE_VARIANT_COLORS))
+    obstacles.append(pipe)
     logging.info(f"New obstacle added at x={screen_width}.")
 
 def spawn_quantum_element(level_config, screen_width, screen_height):
@@ -151,28 +159,31 @@ def handle_level_progression(score, current_level, background, screen, obstacles
     Returns:
         tuple: Updated (current_level, background, level_config).
     """
-    LEVEL_THRESHOLD = settings.LEVEL_THRESHOLD
     if score != 0 and score % LEVEL_THRESHOLD == 0:
         current_level += 1
+        logging.info(f"Progressing to level {current_level}.")
         try:
             new_level_config = load_level(current_level)
         except Exception as e:
             logging.error(f"Failed to load level {current_level}: {e}")
             return current_level, background, level_config
 
+        # Add new obstacles based on the new level config
         new_obstacles = add_initial_obstacles(new_level_config)
         if new_obstacles:
             obstacles.extend(new_obstacles)
             logging.info(f"Added {len(new_obstacles)} new obstacles for level {current_level}.")
 
+        # Update background for new level
         new_background_path = get_level_background(new_level_config)
         if new_background_path:
             background.load_new_background(new_background_path)
             logging.info(f"Background updated for level {current_level}.")
 
         # Adjust game parameters as needed (e.g., speed, spawn rate)
-        settings.PIPE_SPEED += 0.5
-        settings.PIPE_SPAWN_RATE_FRAMES = max(60, settings.PIPE_SPAWN_RATE_FRAMES - 20)
+        settings.PIPE_SPEED = new_level_config.get('obstacle_speed', settings.PIPE_SPEED) + 0.5
+        settings.PIPE_SPAWN_RATE_FRAMES = max(30, settings.PIPE_SPAWN_RATE_FRAMES - 20)
+        logging.info(f"Updated game difficulty: Pipe Speed={settings.PIPE_SPEED}, Spawn Rate Frames={settings.PIPE_SPAWN_RATE_FRAMES}.")
 
         return current_level, background, new_level_config
     else:

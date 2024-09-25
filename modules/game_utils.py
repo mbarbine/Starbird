@@ -1,3 +1,5 @@
+# modules/game_utils.py
+
 import pygame
 import sys
 import os
@@ -59,7 +61,7 @@ def play_background_music(music_path):
             logging.error(f"Failed to play background music {full_path}: {e}")
     else:
         logging.error(f"Background music file {full_path} not found.")
-        
+
 def save_high_scores(high_scores):
     """Saves the high scores to a file."""
     try:
@@ -192,19 +194,22 @@ def pause_game(screen, font):
                     paused = False
 
 def update_obstacles_with_dt(level_config, obstacles, score, current_level, dt):
-    """Updates obstacle positions and spawns new obstacles as needed, considering delta time."""
-    for obstacle in obstacles:
-        if hasattr(obstacle, 'update_with_dt'):
-            obstacle.update_with_dt(dt)
-        elif hasattr(obstacle, 'update'):
-            obstacle.update()
-        else:
-            logging.error(f"Obstacle {obstacle} does not have an 'update' or 'update_with_dt' method.")
+    """
+    Updates the positions of all obstacles based on delta time.
 
-    spawn_interval = level_config.get('pipe_spawn_rate_frames', settings.PIPE_SPAWN_RATE_FRAMES)
-    if score % spawn_interval == 0 and score != 0:
-        add_obstacle(level_config, obstacles, settings.WIDTH)
-        logging.debug("New obstacle spawned.")
+    Args:
+        level_config (dict): Current level configuration.
+        obstacles (list): List of current obstacles.
+        score (int): Current game score.
+        current_level (int): Current level number.
+        dt (float): Delta time to scale movement speed.
+    """
+    for obstacle in obstacles:
+        # Ensure that the obstacle has an 'update' method
+        if hasattr(obstacle, 'update'):
+            obstacle.update(dt)  # Pass 'dt' to the 'update' method
+        else:
+            logging.error(f"Obstacle {obstacle} does not have an 'update' method.")
 
 def add_obstacle(level_config, obstacles, screen_width):
     """Adds an obstacle to the game."""
@@ -213,17 +218,19 @@ def add_obstacle(level_config, obstacles, screen_width):
     pipe_width = level_config.get('pipe_width', settings.PIPE_WIDTH)
     pipe_speed = level_config.get('pipe_speed', settings.PIPE_SPEED)
 
-    new_pipe = Pipe(screen_width, pipe_width, pipe_height, pipe_gap, pipe_speed)
+    new_pipe = Pipe(screen_width, pipe_speed, pipe_gap)
     obstacles.append(new_pipe)
     logging.info(f"New pipe obstacle added at x={screen_width}.")
 
 def update_score(bird, obstacles, score):
     """Updates the score based on obstacles passed."""
     for obstacle in obstacles:
-        if bird.rect.x > obstacle.rect.x + obstacle.rect.width and not obstacle.passed:
-            score += 1
-            obstacle.passed = True  # Mark obstacle as passed
-            logging.info(f"Score updated: {score}")
+        # Check if the obstacle is of type Pipe and the bird has passed it
+        if isinstance(obstacle, Pipe) and not obstacle.passed:
+            if bird.rect.x > obstacle.top_rect.right:
+                score += 1
+                obstacle.passed = True
+                logging.info(f"Score updated: {score}")
     return score
 
 def draw_game_elements(screen, bird, obstacles, quantum_elements):
@@ -252,8 +259,12 @@ def check_collisions(bird, obstacles, quantum_elements):
     """Checks for collisions with obstacles and quantum elements."""
     collision = False
     for obstacle in obstacles:
-        if hasattr(obstacle, 'rect') and bird.rect.colliderect(obstacle.rect):
-            logging.info("Collision detected with obstacle.")
+        if hasattr(obstacle, 'top_rect') and bird.rect.colliderect(obstacle.top_rect):
+            logging.info("Collision detected with top obstacle.")
+            collision = True
+            break
+        if hasattr(obstacle, 'bottom_rect') and bird.rect.colliderect(obstacle.bottom_rect):
+            logging.info("Collision detected with bottom obstacle.")
             collision = True
             break
     if not collision:

@@ -177,9 +177,10 @@ HUD_SETTINGS = {
     'font_size': 36,
     'text_color': COLORS['TEXT'],
     'text_highlight_color': COLORS['TEXT_HIGHLIGHT'],
-    'control_display_time': 100,
+    'control_display_time': 100,  # Time in milliseconds for control instructions display
     'scroll_speed': 2,
 }
+CONTROL_DISPLAY_TIME = 5000  # Time in milliseconds to show control instructions
 
 # -------------------------------
 # Game and AI Settings
@@ -230,4 +231,4 @@ BACKGROUND_MUSIC = os.path.join('assets', 'sounds', 'background_music.wav')
 # Animation Settings
 # -------------------------------
 ANIMATION_SPEED = 0.1  # Speed for bird animation
-AURORA_RADIUS = 50 
+AURORA_RADIUS = 50

@@ -1,18 +1,19 @@
+# modules/pipe.py
+
 import pygame
 import random
 from modules.settings import (
-    PIPE_WIDTH, PIPE_COLOR, PIPE_HEIGHT, PIPE_GAP, PIPE_VARIANT_COLORS, PIPE_SPEED, LEVEL_THRESHOLD, WIDTH
+    PIPE_WIDTH, PIPE_HEIGHT, PIPE_GAP, PIPE_VARIANT_COLORS, PIPE_SPEED, LEVEL_THRESHOLD, WIDTH
 )
 
 class Pipe:
     """
     Represents a pair of top and bottom pipes in the game.
     """
-
     def __init__(self, x, speed=PIPE_SPEED, pipe_gap=PIPE_GAP):
         """
         Initializes the Pipe instance.
-        
+
         Args:
             x (int): The x-coordinate of the pipe.
             speed (int, optional): Movement speed of the pipe. Defaults to PIPE_SPEED.
@@ -42,6 +43,7 @@ class Pipe:
         Args:
             dt (float): Delta time to scale movement speed.
         """
+        # Move both the top and bottom pipes to the left
         self.top_rect.x -= self.speed * dt * 60
         self.bottom_rect.x -= self.speed * dt * 60
 

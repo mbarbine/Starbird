@@ -36,19 +36,23 @@ class ScrollingBackground:
 
     def load_primary_background(self):
         """Loads the primary background image."""
-        self.image = pygame.image.load(os.path.join('assets', BACKGROUND_IMAGE)).convert()
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
-        self.x1 = 0
-        self.x2 = self.width
-        self.y = 0
-        logging.info("Primary background image loaded successfully.")
+        try:
+            self.image = pygame.image.load(BACKGROUND_IMAGE).convert()
+            self.width = self.image.get_width()
+            self.height = self.image.get_height()
+            self.x1 = 0
+            self.x2 = self.width
+            self.y = 0
+            logging.info("Primary background image loaded successfully.")
+        except FileNotFoundError as e:
+            logging.error(f"Background image not found: {e}")
 
     def load_background_layers(self):
         """Loads additional background layers."""
         try:
             for i, layer_filename in enumerate(BACKGROUND_LAYERS):
-                layer_path = os.path.join('assets', layer_filename)
+                # Assume `layer_filename` contains full path or just filename without prepending 'assets'
+                layer_path = os.path.join(layer_filename)
                 layer_image = pygame.image.load(layer_path).convert_alpha()
                 self.layers.append(layer_image)
                 self.positions.append(0)
@@ -160,7 +164,7 @@ class ScrollingBackground:
     def load_new_background(self, layer_filename):
         """Loads a new background layer."""
         try:
-            layer_path = os.path.join('assets', layer_filename)
+            layer_path = os.path.join(layer_filename)
             layer_image = pygame.image.load(layer_path).convert_alpha()
             self.layers.append(layer_image)
             self.positions.append(0)
