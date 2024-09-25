@@ -5,6 +5,7 @@ import random
 import os
 import logging
 from modules.settings import *
+from modules.settings import BACKGROUND_IMAGE, BACKGROUND_SCROLL_SPEED, BACKGROUND_LAYERS, STAR_COUNT, STAR_COLOR, STAR_SPEED, COMET_COLOR, COMET_SIZE, COMET_SPEED, DRAW_BLACK_HOLE, BLACK_HOLE_COLOR, BLACK_HOLE_RADIUS, WIDTH, HEIGHT
 
 class ScrollingBackground:
     """

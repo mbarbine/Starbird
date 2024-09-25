@@ -29,7 +29,7 @@ COLORS = {
     'SHIELD': (0, 255, 255),
     'BIRD': (255, 215, 0),
     'BACKGROUND': (10, 10, 50),
-    'START_SCREEN': (0, 0, 128),
+    'START_SCREEN': (0, 0, 128),  # Add start screen color
     'GAME_OVER': (128, 0, 0),
     'TEXT': (255, 255, 255),
     'TEXT_HIGHLIGHT': (255, 223, 0),
@@ -43,9 +43,9 @@ PIPE_SPAWN_RATE_FRAMES = 120
 PIPE_WIDTH = 90
 PIPE_HEIGHT = 600
 PIPE_GAP = 180
-PIPE_SPEED = 3
+PIPE_SPEED = 3  # Global pipe speed for consistency
 PIPE_VARIANT_COLORS = [
-    COLORS['PIPE'],
+    (34, 139, 34),
     (107, 142, 35),
     (154, 205, 50),
 ]
@@ -78,6 +78,19 @@ BIRD_FRAMES = [
 BIRD_MAX_LIVES = 100
 BIRD_RESPAWN_TIME = 60
 BIRD_INVINCIBILITY_FRAMES = 120
+
+# -------------------------------
+# Background Settings
+# -------------------------------
+BACKGROUND_IMAGE = 'background.png'
+BACKGROUND_SCROLL_SPEED = 2
+BACKGROUND_LAYERS = ['layer1.png', 'layer2.png']
+STAR_COUNT = 150
+STAR_COLOR = COLORS['WHITE']
+STAR_SPEED = 1
+DRAW_BLACK_HOLE = True
+BLACK_HOLE_COLOR = COLORS['BLACK']
+BLACK_HOLE_RADIUS = 40
 
 # -------------------------------
 # Sound and Music Settings
@@ -130,7 +143,7 @@ EVENT_TIMERS = {key: 0 for key in EVENT_FREQUENCY}
 HOLOCRON_SETTINGS = {
     'size': 40,
     'color': COLORS['CYAN'],
-    'speed': PIPE_SPEED,
+    'speed': PIPE_SPEED,  # Uses same speed as pipes for consistency
 }
 
 # -------------------------------
