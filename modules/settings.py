@@ -242,3 +242,11 @@ SHIELD_PULSE_AMPLITUDE = 10
 SHIELD_PULSE_OFFSET = 0
 SHIELD_PULSE_DIRECTION = 1
 SHIELD_PULSE_MIN = 0
+CONTROL_SETTINGS = {
+    'flap_key': pygame.K_SPACE,
+    'shield_key': pygame.K_s,
+    'lightsaber_key': pygame.K_l,
+    'pause_key': pygame.K_p,
+    'retry_key': pygame.K_r,
+    'quit_key': pygame.K_q,
+}

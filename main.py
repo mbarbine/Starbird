@@ -1,3 +1,5 @@
+# main.py
+
 import pygame
 import sys
 import logging
@@ -59,7 +61,7 @@ def main():
     clock = pygame.time.Clock()
 
     # Start playing background music
-    play_background_music()  # Corrected to remove the argument
+    play_background_music()  # No argument needed
 
     # Initialize scrolling background
     background = ScrollingBackground()
@@ -109,11 +111,19 @@ Prepare for an epic adventure across the galaxy."""
 
     # Load sound effects
     sound_effects = {
-        'flap': load_sound('FLAP'),
+        'flap': load_sound('FLAP'),  # Fix key to match lowercase usage in handle_events
         'collision': load_sound('HIT'),
         'shield': load_sound('SHIELD'),
         'lightsaber': load_sound('LASER')
     }
+
+    # DEBUG: Print the loaded sound_effects keys
+    logging.info(f"Loaded sound effects keys: {list(sound_effects.keys())}")
+
+    # Check for missing sounds and remove them from the dictionary
+    sound_effects = {key: sound for key, sound in sound_effects.items() if sound is not None}
+
+    logging.info(f"Available sound effects: {sound_effects}")
 
     running = True
 

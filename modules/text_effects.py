@@ -1,6 +1,10 @@
 import pygame
-import os
 from modules.settings import *
+
+# Define colors
+BLACK = (0, 0, 0)
+YELLOW = (255, 255, 0)
+WHITE = (255, 255, 255)
 
 def render_star_wars_text(text, screen):
     """
