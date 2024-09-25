@@ -1,8 +1,6 @@
-# modules/story.py
-
+import os
 import pygame
 import logging
-import os
 import sys
 from modules.settings import *
 
@@ -28,11 +26,13 @@ def star_wars_intro(text, screen):
     y_offset = HEIGHT
 
     # Initialize background music if specified in settings
-    if BACKGROUND_MUSIC and os.path.exists(os.path.join('assets', BACKGROUND_MUSIC)):
+    background_music_path = os.path.join('assets', 'sounds', BACKGROUND_MUSIC)
+    if BACKGROUND_MUSIC and os.path.exists(background_music_path):
         try:
-            pygame.mixer.music.load(os.path.join('assets', BACKGROUND_MUSIC))
+            pygame.mixer.music.load(background_music_path)
             pygame.mixer.music.set_volume(MUSIC_VOLUME)
             pygame.mixer.music.play(-1)  # Loop indefinitely
+            logging.info("Background music started.")
         except pygame.error as e:
             logging.error(f"Error loading background music: {e}")
 
@@ -49,9 +49,9 @@ def star_wars_intro(text, screen):
                     running = False  # Exit loop on space or enter key
 
         # Clear screen and draw the text
-        screen.fill(BACKGROUND_COLOR)
+        screen.fill(COLORS['BACKGROUND'])  # Use the BACKGROUND color from the COLORS dictionary
         for i, line in enumerate(lines):
-            text_surface = font.render(line, True, TEXT_COLOR)
+            text_surface = font.render(line, True, COLORS['TEXT'])  # Use TEXT color from COLORS
             text_rect = text_surface.get_rect(center=(WIDTH // 2, y_offset + i * line_height))
             screen.blit(text_surface, text_rect)
 
@@ -62,7 +62,7 @@ def star_wars_intro(text, screen):
         clock.tick(FPS)
 
     # Clear the screen after the intro
-    screen.fill(BLACK)
+    screen.fill(COLORS['BLACK'])  # Use BLACK from COLORS
     pygame.display.flip()
 
     # Stop background music after intro if playing
@@ -109,17 +109,17 @@ def display_story(screen, font, story, level_key):
     """
     text = story.get(level_key, "Story not found for this level.")
     lines = text.split('\n')
-    screen.fill(BACKGROUND_COLOR)
+    screen.fill(COLORS['BACKGROUND'])  # Fill background with specified color
 
     for i, line in enumerate(lines):
-        text_surface = font.render(line, True, TEXT_COLOR)
+        text_surface = font.render(line, True, COLORS['TEXT'])  # Use TEXT color from COLORS
         text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 4 + i * FONT_SIZE))
         screen.blit(text_surface, text_rect)
 
     pygame.display.flip()
     logging.info(f"Displayed story for {level_key}")
 
-def load_story(filename='assets/story.txt'):
+def load_story(filename='assets/story/story.txt'):
     """
     Loads and returns the story text as a dictionary.
 

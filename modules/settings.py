@@ -1,5 +1,3 @@
-# modules/settings.py
-
 import os
 import pygame
 
@@ -29,7 +27,7 @@ COLORS = {
     'SHIELD': (0, 255, 255),
     'BIRD': (255, 215, 0),
     'BACKGROUND': (10, 10, 50),
-    'START_SCREEN': (0, 0, 128),  # Add start screen color
+    'START_SCREEN': (0, 0, 128),
     'GAME_OVER': (128, 0, 0),
     'TEXT': (255, 255, 255),
     'TEXT_HIGHLIGHT': (255, 223, 0),
@@ -52,6 +50,11 @@ PIPE_VARIANT_COLORS = [
 PIPE_COLOR = PIPE_VARIANT_COLORS[0]
 
 # -------------------------------
+# Scrolling Settings
+# -------------------------------
+SCROLL_SPEED = 2  # Speed at which the text scrolls during the intro
+
+# -------------------------------
 # Physics Settings
 # -------------------------------
 GRAVITY = 0.15
@@ -66,6 +69,7 @@ FLAP_COOLDOWN_TIME = 12
 # -------------------------------
 # Bird Settings
 # -------------------------------
+BIRD_COLOR = (255, 215, 0) 
 BIRD_WIDTH = 80
 BIRD_HEIGHT = 42
 BIRD_START_X = 100
@@ -93,6 +97,13 @@ BLACK_HOLE_COLOR = COLORS['BLACK']
 BLACK_HOLE_RADIUS = 40
 
 # -------------------------------
+# Comet Settings
+# -------------------------------
+COMET_COLOR = (135, 206, 235)
+COMET_SIZE = 15
+COMET_SPEED = [6, 2]
+
+# -------------------------------
 # Sound and Music Settings
 # -------------------------------
 SOUNDS = {
@@ -107,6 +118,12 @@ SOUNDS = {
 MUSIC_VOLUME = 0.75
 SFX_VOLUME = 0.8
 MUSIC_FADEOUT_TIME = 500
+# -------------------------------
+# Laser Settings
+# -------------------------------
+LASER_COOLDOWN_TIME = 60  # Time in frames for laser cooldown
+LASER_COLOR = (255, 215, 0)  # Example: gold color for lightsaber
+LIGHTSABER_LENGTH = 100  # Example value for the length of the lightsaber
 
 # -------------------------------
 # Control Settings
@@ -143,7 +160,7 @@ EVENT_TIMERS = {key: 0 for key in EVENT_FREQUENCY}
 HOLOCRON_SETTINGS = {
     'size': 40,
     'color': COLORS['CYAN'],
-    'speed': PIPE_SPEED,  # Uses same speed as pipes for consistency
+    'speed': PIPE_SPEED,
 }
 
 # -------------------------------
@@ -155,12 +172,6 @@ HUD_SETTINGS = {
     'text_highlight_color': COLORS['TEXT_HIGHLIGHT'],
     'control_display_time': 100,
     'scroll_speed': 2,
-    'star_count': 150,
-    'star_speed': 1,
-    'star_color': COLORS['WHITE'],
-    'comet_color': (135, 206, 235),
-    'comet_size': 15,
-    'comet_speed': [6, 2],
 }
 
 # -------------------------------
@@ -201,3 +212,15 @@ QUANTUM_FLAP_PROBABILITY = 0.1
 FONT_SIZE = 36
 HIGH_SCORE_FILE = os.path.join('assets', 'highscore.txt')
 HIGHSCORE_ENCRYPTION_KEY = 'supersecretkey'
+
+# -------------------------------
+# Start Screen Color
+# -------------------------------
+START_SCREEN_COLOR = COLORS['START_SCREEN']
+BACKGROUND_MUSIC = 'background_music.wav'  # Ensure the correct path to the music file
+
+
+# -------------------------------
+# Animation Settings
+# -------------------------------
+ANIMATION_SPEED = 0.1  # Speed for bird animation

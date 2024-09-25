@@ -1,15 +1,13 @@
-# modules/game_utils.py
-
 import pygame
 import sys
 import os
 import logging
 import random
+from threading import Lock
 import modules.settings as settings
 from modules.jedi_training import jedi_training
 from modules.dark_side import dark_side_choice
 from modules.holocron import Holocron
-from threading import Lock
 
 # Lock for thread safety when modifying bird attributes
 bird_lock = Lock()
@@ -17,10 +15,8 @@ bird_lock = Lock()
 def init_game_window():
     """Initializes the game window."""
     try:
-        if settings.FULLSCREEN:
-            screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT), pygame.FULLSCREEN)
-        else:
-            screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
+        screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT), 
+                                          pygame.FULLSCREEN if settings.FULLSCREEN else 0)
         logging.info("Game window initialized successfully.")
     except pygame.error as e:
         logging.error(f"Error initializing game window: {e}")
@@ -108,26 +104,20 @@ def get_player_name():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                # If the user clicked on the input_box rect.
-                if input_box.collidepoint(event.pos):
-                    active = not active
-                else:
-                    active = False
+                active = input_box.collidepoint(event.pos)
                 color = color_active if active else color_inactive
-            if event.type == pygame.KEYDOWN:
-                if active:
-                    if event.key == pygame.K_RETURN:
-                        done = True
-                    elif event.key == pygame.K_BACKSPACE:
-                        text = text[:-1]
-                    else:
-                        text += event.unicode
+            if event.type == pygame.KEYDOWN and active:
+                if event.key == pygame.K_RETURN:
+                    done = True
+                elif event.key == pygame.K_BACKSPACE:
+                    text = text[:-1]
+                else:
+                    text += event.unicode
 
         screen = pygame.display.get_surface()
         screen.fill(settings.GAME_OVER_COLOR)
         txt_surface = font.render(text, True, color)
-        width = max(200, txt_surface.get_width() + 10)
-        input_box.w = width
+        input_box.w = max(200, txt_surface.get_width() + 10)
         screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
         pygame.draw.rect(screen, color, input_box, 2)
         pygame.display.flip()
@@ -376,48 +366,3 @@ def random_hyperspace_event(bird):
         with bird_lock:
             bird.velocity = 0
         logging.info(f"Hyperspace jump: Bird teleported to ({new_x}, {new_y}).")
-
-def handle_game_mechanics(screen, bird, obstacles, quantum_elements, event_timers):
-    """
-    Handles game mechanics such as event triggering with cooldowns.
-    """
-    # Jedi Training Event
-    if event_timers['jedi_training'] <= 0 and random.random() < settings.EVENT_FREQUENCY['jedi_training']:
-        success = jedi_training(screen)
-        if success:
-            bird.apply_power_up("shield")
-            logging.info("Jedi Training succeeded: Shield activated.")
-        else:
-            with bird_lock:
-                bird.velocity += settings.GRAVITY * 1.5
-            logging.info("Jedi Training failed: Bird velocity increased.")
-        event_timers['jedi_training'] = settings.EVENT_COOLDOWNS['jedi_training']
-
-    # Dark Side Event
-    if event_timers['dark_side'] <= 0 and random.random() < settings.EVENT_FREQUENCY['dark_side']:
-        if dark_side_choice(screen):
-            for obstacle in obstacles:
-                obstacle.speed += 1
-            logging.info("Dark Side event triggered: Increased obstacle speed.")
-        else:
-            bird.apply_power_up("shield")
-            logging.info("Dark Side event triggered: Shield activated.")
-        event_timers['dark_side'] = settings.EVENT_COOLDOWNS['dark_side']
-
-    # Hyperspace Event
-    if event_timers['hyperspace'] <= 0 and random.random() < settings.EVENT_FREQUENCY['hyperspace']:
-        new_x = random.randint(50, settings.WIDTH - 50)
-        new_y = random.randint(50, settings.HEIGHT - 50)
-        bird.rect.x = new_x
-        bird.rect.y = new_y
-        with bird_lock:
-            bird.velocity = 0
-        logging.info(f"Hyperspace jump: Bird teleported to ({new_x}, {new_y}).")
-        event_timers['hyperspace'] = settings.EVENT_COOLDOWNS['hyperspace']
-
-    # Holocron Spawn Event
-    if event_timers['holocron'] <= 0 and random.random() < settings.EVENT_FREQUENCY['holocron_spawn_rate']:
-        holocron = Holocron(settings.WIDTH, settings.HEIGHT)
-        quantum_elements.append(holocron)
-        logging.info("Holocron spawned.")
-        event_timers['holocron'] = settings.EVENT_COOLDOWNS['holocron']

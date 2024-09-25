@@ -1,5 +1,3 @@
-# modules/bird.py
-
 import pygame
 import numpy as np
 from modules.settings import *  # Import all necessary settings
@@ -20,7 +18,6 @@ class Bird:
             logging.info("Bird animation frames loaded successfully.")
         except pygame.error as e:
             logging.error(f"Error loading bird frames: {e}")
-            # Create placeholder images in case loading fails
             self.images = [pygame.Surface((BIRD_WIDTH, BIRD_HEIGHT)) for _ in BIRD_FRAMES]
             for img in self.images:
                 img.fill(BIRD_COLOR)
@@ -37,7 +34,7 @@ class Bird:
         self.acceleration = GRAVITY
         self.air_resistance = AIR_RESISTANCE
         self.max_velocity = MAX_VELOCITY
-        self.min_velocity = MIN_VELOCITY  # Added minimum velocity
+        self.min_velocity = MIN_VELOCITY
         self.rotation_angle = 0
         self.is_flapping = False
         self.flap_cooldown = 0
@@ -46,11 +43,10 @@ class Bird:
         # Abilities and power-ups
         self.shield_active = False
         self.shield_duration = 0
-        self.pulse_offset = 0
         self.laser_cooldown = LASER_COOLDOWN_TIME
         self.lightsaber_active = False
         self.lightsaber_color = LASER_COLOR
-        self.lightsaber_length = LIGHTSABER_LENGTH  # Corrected the missing setting
+        self.lightsaber_length = LIGHTSABER_LENGTH
 
         # Visual properties
         self.color = BIRD_COLOR
@@ -64,7 +60,6 @@ class Bird:
         Updates the bird's position, velocity, and handles animations based on delta time.
         Should be called every frame.
         """
-        # Apply gravity and air resistance scaled by delta time
         if not self.is_flapping:  # Apply gravity only when not flapping
             self.velocity += self.acceleration * dt
 
@@ -89,31 +84,11 @@ class Bird:
             if self.flap_cooldown <= 0:
                 self.is_flapping = False
 
-        # Laser cooldown
-        if self.laser_cooldown > 0:
-            self.laser_cooldown -= 1
-
-        # Shield management
-        if self.shield_active:
-            self.shield_duration -= 1
-            self.pulse_offset += 1
-            if self.shield_duration <= 0:
-                self.shield_active = False
-                logging.info("Shield deactivated.")
-            if self.pulse_offset > 30:
-                self.pulse_offset = 0
-
-        # Quantum mechanics
-        if self.superposition_active:
-            self.handle_quantum_superposition()
-        if self.entanglement_linked:
-            self.handle_quantum_entanglement()
-
         # Keep bird within screen bounds
-        self.rect.y = max(0, min(self.rect.y, WINDOW_HEIGHT - self.rect.height))
+        self.rect.y = max(0, min(self.rect.y, HEIGHT - self.rect.height))  # Use HEIGHT instead of WINDOW_HEIGHT
         if self.rect.y == 0:
             self.velocity = max(self.velocity, 0)
-        elif self.rect.y == WINDOW_HEIGHT - self.rect.height:
+        elif self.rect.y == HEIGHT - self.rect.height:
             self.velocity = 0
 
     def flap(self):
@@ -222,52 +197,36 @@ class Bird:
         logging.info("All power-ups reset.")
 
     def handle_quantum_superposition(self):
-        """
-        Handles the bird's behavior while in a superposition state.
-        """
+        """Handles the bird's behavior while in a superposition state."""
         self.rect.x += random.randint(-2, 2)
         self.rect.y += random.randint(-2, 2)
 
     def handle_quantum_entanglement(self):
-        """
-        Handles the bird's behavior while entangled.
-        """
+        """Handles the bird's behavior while entangled."""
         pass
 
     def ai_behavior(self):
-        """
-        Placeholder for AI-driven movement or behavior.
-        """
+        """Placeholder for AI-driven movement or behavior."""
         pass
 
     def quantum_error_correction(self):
-        """
-        Placeholder for quantum error correction algorithms.
-        """
+        """Placeholder for quantum error correction algorithms."""
         pass
 
     def quantum_walk(self):
-        """
-        Placeholder for implementing a quantum random walk.
-        """
+        """Placeholder for implementing a quantum random walk."""
         pass
 
     def quantum_optimization(self):
-        """
-        Placeholder for implementing quantum optimization algorithms (VQE, QAOA).
-        """
+        """Placeholder for implementing quantum optimization algorithms (VQE, QAOA)."""
         pass
 
     def quantum_circuit_optimization(self):
-        """
-        Placeholder for quantum circuit optimization methods.
-        """
+        """Placeholder for quantum circuit optimization methods."""
         pass
 
     def get_current_ability(self):
-        """
-        Returns the current ability of the bird.
-        """
+        """Returns the current ability of the bird."""
         if self.lightsaber_active:
             return 'Laser'
         elif self.shield_active:

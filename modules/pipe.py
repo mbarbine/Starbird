@@ -1,5 +1,3 @@
-# modules/pipe.py
-
 import pygame
 import random
 from modules.settings import (
@@ -34,9 +32,6 @@ class Pipe:
         # Track if the pipe has been passed by the bird for scoring
         self.passed = False
 
-        # Optional combined rect for enhanced collision handling (may not always be needed)
-        self.collision_rect = pygame.Rect(x, 0, PIPE_WIDTH, PIPE_HEIGHT)
-
         # Assign a random color from the variants for visual variety
         self.color = random.choice(PIPE_VARIANT_COLORS)
 
@@ -49,7 +44,6 @@ class Pipe:
         """
         self.top_rect.x -= self.speed * dt * 60
         self.bottom_rect.x -= self.speed * dt * 60
-        self.collision_rect.x -= self.speed * dt * 60
 
     def draw(self, screen):
         """
@@ -79,16 +73,6 @@ class Pipe:
         """
         self.speed += (level // LEVEL_THRESHOLD) * 0.5  # Increase speed slightly every few levels
 
-    def adjust_gap(self, score):
-        """
-        Adjusts the gap between the pipes based on the current score.
-
-        Args:
-            score (int): The current score of the player.
-        """
-        if score % 50 == 0 and self.pipe_gap > 100:
-            self.pipe_gap -= 5  # Reduce gap size slightly every 50 points
-
     def is_passed(self, bird):
         """
         Checks if the bird has passed the pipe.
@@ -103,6 +87,7 @@ class Pipe:
             self.passed = True
             return True
         return False
+
 
 def add_pipe(obstacles, x_position):
     """

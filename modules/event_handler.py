@@ -1,5 +1,3 @@
-# modules/event_handler.py
-
 import pygame
 import random
 import logging
@@ -9,7 +7,7 @@ from modules.quantum_flap import apply_quantum_flap
 
 bird_lock = Lock()  # Lock for thread safety
 
-def handle_events(bird, screen, flap_sound, shield_sound, lightsaber_sound, font, dt):
+def handle_events(bird, screen, sound_effects, font, dt):
     """Handles user input and events."""
     keys = pygame.key.get_pressed()
     
@@ -17,7 +15,7 @@ def handle_events(bird, screen, flap_sound, shield_sound, lightsaber_sound, font
     if keys[settings.CONTROL_SETTINGS['flap_key']]:
         if not bird.is_flapping and bird.flap_cooldown <= 0:
             bird.flap()
-            flap_sound.play()  # Play flap sound
+            sound_effects['flap'].play()  # Play flap sound
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -27,26 +25,25 @@ def handle_events(bird, screen, flap_sound, shield_sound, lightsaber_sound, font
         elif event.type == pygame.KEYDOWN:
             if event.key == settings.CONTROL_SETTINGS['pause_key']:
                 logging.info("Pause key pressed. Pausing game.")
-                from modules.screens import pause_game
+                from modules.screen_utils import pause_game
                 pause_game(screen, font)
             elif event.key == settings.CONTROL_SETTINGS['shield_key']:
                 if not bird.shield_active and bird.shield_duration <= 0:
                     bird.apply_power_up("shield")
-                    shield_sound.play()  # Play shield activation sound
+                    sound_effects['shield'].play()  # Play shield activation sound
                     logging.info("Shield key pressed. Shield activated.")
             elif event.key == settings.CONTROL_SETTINGS['lightsaber_key']:
                 if not bird.lightsaber_active:
                     bird.apply_power_up("lightsaber")
-                    lightsaber_sound.play()  # Play lightsaber sound
+                    sound_effects['lightsaber'].play()  # Play lightsaber sound
                     logging.info("Lightsaber key pressed. Lightsaber activated.")
     return True  # Continue running
 
 def handle_quantum_event(bird, quantum_element):
     """Handles the interaction between the bird and a quantum element."""
     try:
-        # Use apply_quantum_flap to modify velocity with quantum effect
         with bird_lock:
-            bird.velocity = apply_quantum_flap()  # Correct function call
+            bird.velocity = apply_quantum_flap()  # Adjust velocity with quantum effect
         logging.debug("Quantum event handled successfully.")
     except Exception as e:
         logging.error(f"Error in handle_quantum_event: {e}")
