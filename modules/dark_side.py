@@ -3,6 +3,7 @@
 import pygame
 import logging
 from modules.settings import WIDTH, HEIGHT, COLORS
+import sys
 
 def dark_side_choice(screen):
     """

@@ -1,4 +1,5 @@
 import pygame
+import random
 from modules.settings import *
 class DeathStar:
     def __init__(self):

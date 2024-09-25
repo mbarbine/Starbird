@@ -1,3 +1,5 @@
+# modules/bird.py
+
 import pygame
 import numpy as np
 from modules.settings import *  # Import all necessary settings
@@ -47,6 +49,7 @@ class Bird:
         self.lightsaber_active = False
         self.lightsaber_color = LASER_COLOR
         self.lightsaber_length = LIGHTSABER_LENGTH
+        self.pulse_offset = 0  # Initialize pulse_offset for shield effect
 
         # Visual properties
         self.color = BIRD_COLOR
@@ -83,6 +86,10 @@ class Bird:
             self.flap_cooldown -= 1
             if self.flap_cooldown <= 0:
                 self.is_flapping = False
+
+        # Update shield pulse effect
+        if self.shield_active:
+            self.pulse_offset += 2  # Adjust pulse speed as needed
 
         # Keep bird within screen bounds
         self.rect.y = max(0, min(self.rect.y, HEIGHT - self.rect.height))  # Use HEIGHT instead of WINDOW_HEIGHT
@@ -176,6 +183,7 @@ class Bird:
         elif power_up_type == "shield":
             self.shield_active = True
             self.shield_duration = SHIELD_DURATION
+            self.pulse_offset = 0  # Reset pulse offset when activating shield
             logging.info("Shield power-up applied.")
         elif power_up_type == "slowdown":
             self.air_resistance = SLOWDOWN_AIR_RESISTANCE
@@ -191,6 +199,7 @@ class Bird:
         self.air_resistance = AIR_RESISTANCE
         self.shield_active = False
         self.shield_duration = 0
+        self.pulse_offset = 0  # Reset pulse offset when deactivating shield
         self.lightsaber_active = False
         self.rect.size = (BIRD_WIDTH, BIRD_HEIGHT)
         self.image = pygame.transform.scale(self.image, (BIRD_WIDTH, BIRD_HEIGHT))

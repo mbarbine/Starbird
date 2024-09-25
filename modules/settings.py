@@ -232,3 +232,13 @@ BACKGROUND_MUSIC = os.path.join('assets', 'sounds', 'background_music.wav')
 # -------------------------------
 ANIMATION_SPEED = 0.1  # Speed for bird animation
 AURORA_RADIUS = 50
+# -------------------------------
+# Power-Up Settings
+# -------------------------------
+SHIELD_DURATION = 5000  # Shield duration in millisecond
+SHIELD_COLOR = COLORS['SHIELD']
+SHIELD_PULSE_SPEED = 0.1
+SHIELD_PULSE_AMPLITUDE = 10
+SHIELD_PULSE_OFFSET = 0
+SHIELD_PULSE_DIRECTION = 1
+SHIELD_PULSE_MIN = 0
