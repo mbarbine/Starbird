@@ -51,7 +51,7 @@ class Bird:
         self.shield_duration = 0
         self.lightsaber_active = False
         self.lightsaber_duration = 0  # Added lightsaber_duration
-        self.lightsaber_color = LASER_COLOR
+        self.lightsaber_color = LIGHTSABER_COLOR
         self.lightsaber_length = LIGHTSABER_LENGTH
         self.pulse_offset = 0  # Initialize pulse_offset for shield effect
 
@@ -182,12 +182,13 @@ class Bird:
     def activate_lightsaber(self):
         """Activates the bird's lightsaber."""
         self.lightsaber_active = True
-        self.lightsaber_duration = LIGHTSABER_DURATION  # Set duration
+        self.lightsaber_duration = LIGHTSABER_DURATION  # Set duration from settings
         logging.info("Lightsaber activated.")
 
     def deactivate_lightsaber(self):
         """Deactivates the bird's lightsaber."""
         self.lightsaber_active = False
+        self.lightsaber_duration = 0
         logging.info("Lightsaber deactivated.")
 
     def apply_power_up(self, power_up_type):

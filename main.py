@@ -1,3 +1,4 @@
+# main.py
 
 import pygame
 import sys
@@ -97,8 +98,8 @@ Prepare for an epic adventure across the galaxy."""
     # Initialize quantum elements
     quantum_elements = []
 
-    # Initialize Holocron
-    holocron = Holocron(settings.WIDTH, settings.HEIGHT) if Holocron else None
+    # Initialize Holocron if applicable
+    holocron = Holocron(settings.WIDTH, settings.HEIGHT)
     if holocron:
         quantum_elements.append(holocron)
 
@@ -137,17 +138,17 @@ Prepare for an epic adventure across the galaxy."""
         dt = clock.tick(settings.FPS) / 1000  # Delta time in seconds
         current_time = pygame.time.get_ticks() / 1000  # Current game time in seconds
 
+        # Handle events (input, etc.)
+        running = handle_events(bird, screen, sound_effects, font, dt)
+
         # Update background
         background.update(dt)
         background.draw(screen)
 
-        # Event handling
-        running = handle_events(bird, screen, sound_effects, font, dt)
-
         # Update bird
         bird.update_with_dt(dt)
 
-        # Handle quantum events safely
+        # Handle game mechanics (e.g., power-ups, events)
         handle_game_mechanics(screen, bird, obstacles, quantum_elements, event_timers, current_time)
 
         # Quantum Elements Spawning Logic
@@ -163,8 +164,8 @@ Prepare for an epic adventure across the galaxy."""
 
         # Check collisions
         if check_collisions(bird, obstacles, quantum_elements):
-            handle_collision(bird, sound_effects['collision'])
-            update_leaderboard(score, high_scores)
+            handle_collision(bird, sound_effects.get('collision'))
+            update_leaderboard(screen, score, high_scores)
             if bird.lives <= 0:
                 game_over_screen(screen, font, score, high_scores)
                 running = False
@@ -187,13 +188,28 @@ Prepare for an epic adventure across the galaxy."""
 
         # Check if bird is off-screen
         if bird.rect.y > settings.HEIGHT or bird.rect.y < 0:
-            update_leaderboard(score, high_scores)
+            update_leaderboard(screen, score, high_scores)
             game_over_screen(screen, font, score, high_scores)
             running = False
 
     # Shut down executor and quit
     executor.shutdown(wait=True)
     pygame.quit()
+
+def update_leaderboard(screen, score, high_scores):
+    """
+    Updates the leaderboard with the current score.
+
+    Args:
+        screen (pygame.Surface): The screen surface for displaying the input box if a new high score is achieved.
+        score (int): The current score.
+        high_scores (dict): The high score data to be updated.
+    """
+    if score > high_scores['top_score']:
+        high_scores['top_score'] = score
+        high_scores['player'] = get_player_name(screen)
+        save_high_scores(high_scores)
+        logging.info(f"New high score achieved: {score} by {high_scores['player']}")
 
 if __name__ == "__main__":
     main()

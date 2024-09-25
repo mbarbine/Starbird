@@ -1,8 +1,8 @@
 {
     "level1": {
         "background": "assets/background_level1.png",
-        "obstacle_speed": 5,
-        "obstacle_type": "pipe",
+        "pipe_speed": 5,
+        "pipe_spawn_rate_frames": 90,
         "num_obstacles": 3,
         "quantum_probability": 0.1,
         "quantum_element": "QBlackHole",
@@ -10,22 +10,31 @@
         "pipe_variants": [
             [34, 139, 34],
             [107, 142, 35],
-            [154, 205, 50]
+            [154, 205, 50],
+            [901, 901, 901],
+            [0, 0, 0],
+            [128, 128, 128]
         ]
     },
     "level2": {
-        "level_number": 2,
-        "background_image": "assets/level2_bg.png",
-        "obstacle_speed": 4,
-        "obstacle_width": 70,
-        "obstacle_gap": 180,
-        "quantum_probability": 0.15,
-        "black_hole_radius": 50,
-        "aurora_radius": 60,
-        "obstacle_color": [255, 100, 100],
-        "max_obstacles": 5,
-        "quantum_spawn_interval": 10,
-        "difficulty_scale": 1.2
-      }
+        "background": "assets/background_level2.png",
+        "pipe_speed": 6,
+        "pipe_spawn_rate_frames": 80,
+        "num_obstacles": 4,
+        "quantum_probability": 0.015,
+        "quantum_element": "AuroraBorealis",
+        "gap_size": 160,
+        "pipe_variants": [
+            [255, 0, 0],
+            [0, 255, 0],
+            [0, 0, 255],
+            [255, 255, 0],
+            [255, 0, 255],
+            [0, 255, 255],
+            [255, 255, 255],
+            [0, 0, 0],
+            [128, 128, 128]
+            
+        ]
     }
-      
+}

@@ -26,4 +26,34 @@ def add_obstacle(obstacles, width, height=HEIGHT, gap_size=GAP_SIZE):
 
 def spawn_quantum_element(width, height):
     """Spawns a random QuantumElement."""
-    return QuantumElement.spawn_random(width, height, BLACK_HOLE_RADIUS, AURORA_RADIUS)
+    return QuantumElement.spawn_random(width, height, BLACK_HOLE_RADIUS, AURORA_RADIUS) - level_config - {
+    "level1": {
+        "background": "assets/background_level1.png",
+        "obstacle_speed": 5,
+        "obstacle_type": "pipe",
+        "num_obstacles": 3,
+        "quantum_probability": 0.1,
+        "quantum_element": "QBlackHole",
+        "gap_size": 180,
+        "pipe_variants": [
+            [34, 139, 34],
+            [107, 142, 35],
+            [154, 205, 50]
+        ]
+    },
+    "level2": {
+        "level_number": 2,
+        "background_image": "assets/level2_bg.png",
+        "obstacle_speed": 4,
+        "obstacle_width": 70,
+        "obstacle_gap": 180,
+        "quantum_probability": 0.15,
+        "black_hole_radius": 50,
+        "aurora_radius": 60,
+        "obstacle_color": [255, 100, 100],
+        "max_obstacles": 5,
+        "quantum_spawn_interval": 10,
+        "difficulty_scale": 1.2
+      }
+    }
+      

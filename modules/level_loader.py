@@ -5,44 +5,78 @@ import logging
 import os
 import random
 from modules.settings import (
-    PIPE_SPEED, PIPE_GAP, BLACK_HOLE_RADIUS, AURORA_RADIUS,
-    LEVEL_THRESHOLD, PIPE_SPAWN_RATE_FRAMES, PIPE_VARIANT_COLORS,
-    WIDTH, HEIGHT
+    WIDTH, HEIGHT, PIPE_SPEED, PIPE_GAP, BLACK_HOLE_RADIUS, AURORA_RADIUS,
+    LEVEL_THRESHOLD, PIPE_SPAWN_RATE_FRAMES, PIPE_VARIANT_COLORS
 )
 from modules.pipe import Pipe
+from modules.holocron import Holocron
 from modules.backgrounds import ScrollingBackground
+
+# Level Configuration Dictionary for hard-coded levels
+LEVEL_CONFIGS = {
+    1: {
+        'background': 'assets/background_level1.png',
+        'pipe_speed': 5,
+        'pipe_spawn_rate_frames': 90,
+        'num_obstacles': 3,
+        'quantum_probability': 0.1,
+        'quantum_element': 'QBlackHole',
+        'gap_size': 180,
+        'pipe_variants': [(34, 139, 34), (107, 142, 35), (154, 205, 50)]
+    },
+    2: {
+        'background': 'assets/background_level2.png',
+        'pipe_speed': 6,
+        'pipe_spawn_rate_frames': 80,
+        'num_obstacles': 4,
+        'quantum_probability': 0.015,
+        'quantum_element': 'AuroraBorealis',
+        'gap_size': 160,
+        'pipe_variants': [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)]
+    },
+    # Additional hard-coded levels can be added here
+}
 
 def load_level(level_number):
     """
-    Loads the level configuration from a JSON file.
+    Loads the level configuration based on the level number, either from the predefined
+    dictionary or from an external JSON file.
 
     Args:
-        level_number (int): The current level number to load.
+        level_number (int): The current level number.
 
     Returns:
-        dict: A dictionary containing the level configuration.
+        dict: Level configuration settings.
     """
     level_file_path = os.path.join('levels', 'level_config.json')
-    try:
-        if not os.path.exists(level_file_path):
-            logging.error(f"Level configuration file {level_file_path} does not exist.")
+
+    if os.path.exists(level_file_path):
+        # Load level from JSON file if available
+        try:
+            with open(level_file_path, 'r') as file:
+                level_data = json.load(file)
+                level_key = f'level{level_number}'
+                if level_key in level_data:
+                    level_config = level_data[level_key]
+                    logging.info(f"Level {level_number} configuration loaded successfully from JSON.")
+                    return level_config
+                else:
+                    logging.warning(f"Level {level_number} configuration not found in JSON. Using predefined settings.")
+                    return LEVEL_CONFIGS.get(level_number, default_level_config())
+        except json.JSONDecodeError as json_err:
+            logging.error(f"JSON decode error in level configuration: {json_err}")
+        except Exception as e:
+            logging.error(f"Unexpected error loading level configuration: {e}")
+    else:
+        # Fall back to predefined dictionary if JSON file doesn't exist
+        if level_number in LEVEL_CONFIGS:
+            logging.info(f"Level {level_number} loaded from predefined configuration.")
+            return LEVEL_CONFIGS[level_number]
+        else:
+            logging.warning(f"Level {level_number} not found. Loading default level configuration.")
             return default_level_config()
 
-        with open(level_file_path, 'r') as file:
-            level_data = json.load(file)
-            level_key = f'level{level_number}'
-            if level_key in level_data:
-                level_config = level_data[level_key]
-                logging.info(f"Level {level_number} configuration loaded successfully.")
-                return level_config
-            else:
-                logging.warning(f"Level {level_number} configuration not found. Using default settings.")
-                return default_level_config()
-    except json.JSONDecodeError as json_err:
-        logging.error(f"JSON decode error in level configuration: {json_err}")
-    except Exception as e:
-        logging.error(f"Unexpected error loading level configuration: {e}")
-    
+    # If JSON loading fails, return default configuration
     return default_level_config()
 
 def default_level_config():
@@ -55,8 +89,8 @@ def default_level_config():
     logging.info("Using default level configuration.")
     return {
         'background': 'assets/background_default.png',
-        'obstacle_speed': PIPE_SPEED,
-        'obstacle_type': 'pipe',
+        'pipe_speed': PIPE_SPEED,
+        'pipe_spawn_rate_frames': 100,
         'num_obstacles': 3,
         'quantum_probability': 0.01,
         'quantum_element': 'QBlackHole',
@@ -93,7 +127,7 @@ def add_initial_obstacles(level_config):
     for i in range(num_obstacles):
         pipe = Pipe(
             x=i * 300 + WIDTH,
-            speed=level_config.get('obstacle_speed', PIPE_SPEED),
+            speed=level_config.get('pipe_speed', PIPE_SPEED),
             pipe_gap=level_config.get('gap_size', PIPE_GAP)
         )
         pipe.color = pipe_variants[i % len(pipe_variants)]  # Use color variants cyclically
@@ -103,7 +137,7 @@ def add_initial_obstacles(level_config):
 
 def add_obstacle(level_config, obstacles, screen_width):
     """
-    Adds an obstacle to the game based on the level configuration.
+    Adds a new obstacle to the game based on the level configuration.
 
     Args:
         level_config (dict): Configuration dictionary for the level.
@@ -112,7 +146,7 @@ def add_obstacle(level_config, obstacles, screen_width):
     """
     pipe = Pipe(
         x=screen_width,
-        speed=level_config.get('obstacle_speed', PIPE_SPEED),
+        speed=level_config.get('pipe_speed', PIPE_SPEED),
         pipe_gap=level_config.get('gap_size', PIPE_GAP)
     )
     pipe.color = random.choice(level_config.get('pipe_variants', PIPE_VARIANT_COLORS))
@@ -129,18 +163,25 @@ def spawn_quantum_element(level_config, screen_width, screen_height):
         screen_height (int): Height of the screen for positioning the quantum element.
 
     Returns:
-        dict: Quantum element data, or None if spawning is not required.
+        QuantumElement or None: The spawned quantum element or None if not spawned.
     """
     if random.random() < level_config.get('quantum_probability', 0.01):
         quantum_type = level_config.get('quantum_element', 'QBlackHole')
-        quantum_element = {
-            'type': quantum_type,
-            'x_position': random.randint(50, screen_width - 50),
-            'y_position': random.randint(50, screen_height - 50),
-            'radius': BLACK_HOLE_RADIUS if quantum_type == 'QBlackHole' else AURORA_RADIUS,
-            'color': (0, 0, 0) if quantum_type == 'QBlackHole' else (0, 255, 255)
-        }
-        logging.info(f"Quantum element {quantum_type} spawned at ({quantum_element['x_position']}, {quantum_element['y_position']}).")
+        if quantum_type == 'QBlackHole':
+            radius = BLACK_HOLE_RADIUS
+            color = settings.COLORS.get('BLACK', (0, 0, 0))
+        elif quantum_type == 'AuroraBorealis':
+            radius = AURORA_RADIUS
+            color = settings.COLORS.get('CYAN', (0, 255, 255))
+        else:
+            radius = BLACK_HOLE_RADIUS
+            color = settings.COLORS.get('BLACK', (0, 0, 0))
+        
+        x = random.randint(radius, screen_width - radius)
+        y = random.randint(radius, screen_height - radius)
+        rect = pygame.Rect(x - radius, y - radius, radius * 2, radius * 2)
+        quantum_element = QuantumElement(rect, quantum_type)
+        logging.info(f"Quantum element {quantum_type} spawned at ({x}, {y}).")
         return quantum_element
     return None
 
@@ -181,9 +222,10 @@ def handle_level_progression(score, current_level, background, screen, obstacles
             logging.info(f"Background updated for level {current_level}.")
 
         # Adjust game parameters as needed (e.g., speed, spawn rate)
-        settings.PIPE_SPEED = new_level_config.get('obstacle_speed', settings.PIPE_SPEED) + 0.5
-        settings.PIPE_SPAWN_RATE_FRAMES = max(30, settings.PIPE_SPAWN_RATE_FRAMES - 20)
-        logging.info(f"Updated game difficulty: Pipe Speed={settings.PIPE_SPEED}, Spawn Rate Frames={settings.PIPE_SPAWN_RATE_FRAMES}.")
+        global PIPE_SPEED, PIPE_SPAWN_RATE_FRAMES  # Declare as global to modify
+        PIPE_SPEED = new_level_config.get('pipe_speed', PIPE_SPEED) + 0.5
+        PIPE_SPAWN_RATE_FRAMES = max(60, PIPE_SPAWN_RATE_FRAMES - 10)
+        logging.info(f"Updated game difficulty: Pipe Speed={PIPE_SPEED}, Spawn Rate Frames={PIPE_SPAWN_RATE_FRAMES}.")
 
         return current_level, background, new_level_config
     else:

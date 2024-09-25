@@ -1,4 +1,5 @@
 # quantum_effects.py
+
 import numpy as np
 import random
 import pygame
@@ -17,14 +18,20 @@ class QuantumElement:
     @staticmethod
     def spawn_random(width, height, black_hole_radius, aurora_radius):
         if random.random() < 0.5:
-            rect = pygame.Rect(random.randint(0, width - black_hole_radius * 2), 
-                               random.randint(height // 2, height - black_hole_radius * 2), 
-                               black_hole_radius * 2, black_hole_radius * 2)
+            rect = pygame.Rect(
+                random.randint(0, width - black_hole_radius * 2),
+                random.randint(height // 2, height - black_hole_radius * 2),
+                black_hole_radius * 2,
+                black_hole_radius * 2
+            )
             return QuantumElement(rect, 'black_hole')
         else:
-            rect = pygame.Rect(random.randint(0, width - aurora_radius * 2), 
-                               random.randint(height // 2, height - aurora_radius * 2), 
-                               aurora_radius * 2, aurora_radius * 2)
+            rect = pygame.Rect(
+                random.randint(0, width - aurora_radius * 2),
+                random.randint(height // 2, height - aurora_radius * 2),
+                aurora_radius * 2,
+                aurora_radius * 2
+            )
             return QuantumElement(rect, 'aurora')
 
 def apply_quantum_flap():
@@ -39,17 +46,19 @@ def adjust_obstacle_speed():
 
 def handle_quantum_event(bird, quantum_element, bird_velocity, flap_power):
     is_falling = True
-    if quantum_element and bird.colliderect(quantum_element.rect):
+    if quantum_element and bird.rect.colliderect(quantum_element.rect):
         if quantum_element.type == 'black_hole':
-            # Quantum Warp
-            bird.x = np.random.randint(0, bird.get_width())
-            bird.y = np.random.randint(0, bird.get_height())
+            # Quantum Warp: Teleport bird to a random location
+            bird.rect.x = random.randint(0, WIDTH - bird.rect.width)
+            bird.rect.y = random.randint(0, HEIGHT - bird.rect.height)
             quantum_element = None  # Remove black hole after use
-            bird_velocity = flap_power  # Give another chance
+            bird.velocity = flap_power  # Give another chance
             is_falling = False
+            logging.info("Quantum Warp activated: Bird teleported.")
         elif quantum_element.type == 'aurora':
-            # Quantum Resurrection or Phase Shift
-            bird_velocity = flap_power
+            # Quantum Resurrection or Phase Shift: Reset bird's velocity
+            bird.velocity = flap_power
             is_falling = False
             quantum_element = None  # Remove aurora after use
+            logging.info("Quantum Aurora activated: Bird's velocity reset.")
     return bird_velocity, is_falling

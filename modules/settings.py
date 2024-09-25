@@ -131,6 +131,20 @@ LASER_COOLDOWN_TIME = 60  # Time in frames for laser cooldown
 LASER_COLOR = COLORS['BIRD']  # Color of the laser, matching the bird color
 LIGHTSABER_COLOR = COLORS['GREEN']  # Defined color for the lightsaber
 LIGHTSABER_LENGTH = 100  # Example value for the length of the lightsaber
+LIGHTSABER_DURATION = 8000  # Duration in milliseconds for lightsaber power-up
+
+# -------------------------------
+# Power-Up Settings
+# -------------------------------
+SHRINK_SCALE = 0.8  # Scale factor for shrink power-up
+SHIELD_DURATION = 5000  # Shield duration in milliseconds
+SHIELD_COLOR = COLORS['SHIELD']
+SHIELD_PULSE_SPEED = 0.1
+SHIELD_PULSE_AMPLITUDE = 10
+SHIELD_PULSE_OFFSET = 0
+
+SLOWDOWN_DURATION = 5000  # Duration in milliseconds for slowdown power-up
+SLOWDOWN_AIR_RESISTANCE = 0.95  # Air resistance factor during slowdown
 
 # -------------------------------
 # Control Settings
@@ -213,6 +227,7 @@ QUANTUM_FLAP_VARIANTS = {
     'reduced': QUANTUM_FLAP_STRENGTH * 0.8,
 }
 QUANTUM_FLAP_PROBABILITY = 0.1
+QUANTUM_FLAP_COOLDOWN_TIME = 2.0  # Cooldown time in seconds between quantum flaps
 
 # -------------------------------
 # Miscellaneous Settings
@@ -232,39 +247,3 @@ BACKGROUND_MUSIC = os.path.join('assets', 'sounds', 'background_music.wav')
 # -------------------------------
 ANIMATION_SPEED = 0.1  # Speed for bird animation
 AURORA_RADIUS = 50
-# -------------------------------
-# Power-Up Settings
-# -------------------------------
-SHIELD_DURATION = 5000  # Shield duration in millisecond
-SHIELD_COLOR = COLORS['SHIELD']
-SHIELD_PULSE_SPEED = 0.1
-SHIELD_PULSE_AMPLITUDE = 10
-SHIELD_PULSE_OFFSET = 0
-
-# Quantum Flap Configuration
-QUANTUM_FLAP_COOLDOWN_TIME = 2.0  # Cooldown time in seconds between quantum flaps
-QUANTUM_FLAP_STRENGTH = -20
-QUANTUM_FLAP_SCALING_FACTOR = 1.5
-QUANTUM_FLAP_VARIANTS = {
-    'standard': QUANTUM_FLAP_STRENGTH,
-    'boost': QUANTUM_FLAP_STRENGTH * 1.2,
-    'reduced': QUANTUM_FLAP_STRENGTH * 0.8,
-}
-QUANTUM_FLAP_PROBABILITY = 0.1
-
-
-SHIELD_PULSE_DIRECTION = 1
-SHIELD_PULSE_MIN = 0
-CONTROL_SETTINGS = {
-    'flap_key': pygame.K_SPACE,
-    'shield_key': pygame.K_s,
-    'lightsaber_key': pygame.K_l,
-    'pause_key': pygame.K_p,
-    'retry_key': pygame.K_r,
-    'quit_key': pygame.K_q,
-}
-# Power-Up Settings
-SLOWDOWN_DURATION = 5000  # Duration in milliseconds
-SLOWDOWN_AIR_RESISTANCE = 0.95
-LIGHTSABER_DURATION = 8000 
-LIGHTSABER_COLOR = COLORS['GREEN']

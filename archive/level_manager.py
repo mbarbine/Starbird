@@ -6,7 +6,8 @@ import os
 import random
 from modules.settings import (
     WIDTH, HEIGHT, PIPE_SPEED, PIPE_GAP, BLACK_HOLE_RADIUS, AURORA_RADIUS,
-    LEVEL_THRESHOLD, PIPE_SPAWN_RATE_FRAMES, PIPE_VARIANT_COLORS
+    LEVEL_THRESHOLD, PIPE_SPAWN_RATE_FRAMES, PIPE_VARIANT_COLORS,
+    PIPE_SPAWN_RATE_FRAMES, PIPE_SPEED
 )
 from modules.pipe import Pipe
 from modules.holocron import Holocron
@@ -76,6 +77,8 @@ def load_level(level_number):
             logging.warning(f"Level {level_number} not found. Loading default level configuration.")
             return default_level_config()
 
+    return default_level_config()
+
 def default_level_config():
     """
     Returns a default level configuration if no specific level config is found.
@@ -92,7 +95,7 @@ def default_level_config():
         'quantum_probability': 0.01,
         'quantum_element': 'QBlackHole',
         'gap_size': PIPE_GAP,
-        'pipe_variants': [(34, 139, 34), (107, 142, 35), (154, 205, 50)]  # Default pipe colors
+        'pipe_variants': PIPE_VARIANT_COLORS  # Use defined pipe colors
     }
 
 def get_level_background(level_config):
@@ -119,11 +122,7 @@ def add_initial_obstacles(level_config):
     """
     obstacles = []
     num_obstacles = level_config.get('num_obstacles', 3)
-    pipe_variants = level_config.get('pipe_variants', [(34, 139, 34), (107, 142, 35), (154, 205, 50)])
-    
-    # Ensure that there are valid pipe variants to avoid IndexError
-    if not pipe_variants:
-        pipe_variants = [(34, 139, 34)]
+    pipe_variants = level_config.get('pipe_variants', PIPE_VARIANT_COLORS)
 
     for i in range(num_obstacles):
         pipe = Pipe(
@@ -131,15 +130,14 @@ def add_initial_obstacles(level_config):
             speed=level_config.get('pipe_speed', PIPE_SPEED),
             pipe_gap=level_config.get('gap_size', PIPE_GAP)
         )
-        pipe.color = pipe_variants[i % len(pipe_variants)]  # Set color with modulus to avoid IndexError
+        pipe.color = pipe_variants[i % len(pipe_variants)]  # Use color variants cyclically
         obstacles.append(pipe)
-    
     logging.info(f"Added {num_obstacles} initial obstacles based on level configuration.")
     return obstacles
 
 def add_obstacle(level_config, obstacles, screen_width):
     """
-    Adds a new obstacle to the game based on the level configuration.
+    Adds an obstacle to the game based on the level configuration.
 
     Args:
         level_config (dict): Configuration dictionary for the level.
@@ -151,7 +149,7 @@ def add_obstacle(level_config, obstacles, screen_width):
         speed=level_config.get('pipe_speed', PIPE_SPEED),
         pipe_gap=level_config.get('gap_size', PIPE_GAP)
     )
-    pipe.color = random.choice(level_config.get('pipe_variants', [(34, 139, 34)]))
+    pipe.color = random.choice(level_config.get('pipe_variants', PIPE_VARIANT_COLORS))
     obstacles.append(pipe)
     logging.info(f"New obstacle added at x={screen_width}.")
 
@@ -169,13 +167,15 @@ def spawn_quantum_element(level_config, screen_width, screen_height):
     """
     if random.random() < level_config.get('quantum_probability', 0.01):
         quantum_type = level_config.get('quantum_element', 'QBlackHole')
-        return {
+        quantum_element = {
             'type': quantum_type,
             'x_position': random.randint(50, screen_width - 50),
             'y_position': random.randint(50, screen_height - 50),
             'radius': BLACK_HOLE_RADIUS if quantum_type == 'QBlackHole' else AURORA_RADIUS,
             'color': (0, 0, 0) if quantum_type == 'QBlackHole' else (0, 255, 255)
         }
+        logging.info(f"Quantum element {quantum_type} spawned at ({quantum_element['x_position']}, {quantum_element['y_position']}).")
+        return quantum_element
     return None
 
 def handle_level_progression(score, current_level, background, screen, obstacles, level_config):
@@ -215,51 +215,11 @@ def handle_level_progression(score, current_level, background, screen, obstacles
             logging.info(f"Background updated for level {current_level}.")
 
         # Adjust game parameters as needed (e.g., speed, spawn rate)
-        settings.PIPE_SPEED += 0.5
-        settings.PIPE_SPAWN_RATE_FRAMES = max(60, settings.PIPE_SPAWN_RATE_FRAMES - 10)
+        global PIPE_SPEED, PIPE_SPAWN_RATE_FRAMES  # Ensure we're modifying the global settings
+        PIPE_SPEED += 0.5
+        PIPE_SPAWN_RATE_FRAMES = max(60, PIPE_SPAWN_RATE_FRAMES - 10)
+        logging.info(f"Updated game difficulty: Pipe Speed={PIPE_SPEED}, Spawn Rate Frames={PIPE_SPAWN_RATE_FRAMES}.")
 
         return current_level, background, new_level_config
     else:
         return current_level, background, level_config
-
-def create_black_hole(screen_width, screen_height):
-    """
-    Creates a black hole quantum element.
-
-    Args:
-        screen_width (int): Width of the screen.
-        screen_height (int): Height of the screen.
-
-    Returns:
-        dict: Dictionary representing the black hole element.
-    """
-    x_position = random.randint(50, screen_width - 50)
-    y_position = random.randint(50, screen_height - 50)
-    return {
-        'type': 'black_hole',
-        'x_position': x_position,
-        'y_position': y_position,
-        'radius': BLACK_HOLE_RADIUS,
-        'color': (0, 0, 0)
-    }
-
-def create_aurora(screen_width, screen_height):
-    """
-    Creates an aurora quantum element.
-
-    Args:
-        screen_width (int): Width of the screen.
-        screen_height (int): Height of the screen.
-
-    Returns:
-        dict: Dictionary representing the aurora element.
-    """
-    x_position = random.randint(50, screen_width - 50)
-    y_position = random.randint(50, screen_height - 50)
-    return {
-        'type': 'aurora',
-        'x_position': x_position,
-        'y_position': y_position,
-        'radius': AURORA_RADIUS,
-        'color': (0, 255, 255)
-    }
