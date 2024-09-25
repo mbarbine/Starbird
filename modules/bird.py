@@ -68,12 +68,22 @@ class Bird:
         Should be called every frame.
         """
         with self.bird_lock:
-            if not self.is_flapping:  # Apply gravity only when not flapping
-                self.velocity += self.acceleration * dt
+            # Apply gravity
+            self.velocity += self.acceleration
 
+            # Apply flap strength if flapping
+            if self.is_flapping:
+                self.velocity = FLAP_STRENGTH
+                self.is_flapping = False
+
+            # Apply air resistance
             self.velocity *= self.air_resistance
+
+            # Clamp velocity
             self.velocity = max(min(self.velocity, self.max_velocity), self.min_velocity)
-            self.rect.y += self.velocity * dt
+
+            # Update position
+            self.rect.y += self.velocity
 
             # Rotate bird based on velocity
             self.rotation_angle = max(-BIRD_ROTATION_LIMIT, min(self.velocity * ROTATION_SCALING, BIRD_ROTATION_LIMIT))
@@ -177,7 +187,7 @@ class Bird:
             start_pos[0] + self.lightsaber_length * np.cos(angle_rad),
             start_pos[1] + self.lightsaber_length * np.sin(angle_rad),
         )
-        pygame.draw.line(screen, self.lightsaber_color, start_pos, end_pos, 5)
+        pygame.draw.line(screen, self.lightsaber_color, start_pos, end_pos, LASER_WIDTH)
 
     def activate_lightsaber(self):
         """Activates the bird's lightsaber."""

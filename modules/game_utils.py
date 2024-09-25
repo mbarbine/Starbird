@@ -121,7 +121,7 @@ def get_player_name():
                     text += event.unicode
 
         screen = pygame.display.get_surface()
-        screen.fill(settings.GAME_OVER_COLOR)
+        screen.fill(settings.GAME_OVER)  # Changed to GAME_OVER color for visibility
         txt_surface = font.render(text, True, color)
         input_box.w = max(200, txt_surface.get_width() + 10)
         screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
@@ -151,7 +151,7 @@ def start_screen(screen, font):
 
 def game_over_screen(screen, font, score, high_scores):
     """Displays the Game Over screen."""
-    screen.fill(settings.GAME_OVER_COLOR)
+    screen.fill(settings.GAME_OVER)
     game_over_text = font.render("Game Over", True, settings.RED)
     score_text = font.render(f"Your Score: {score}", True, settings.WHITE)
     high_score_text = font.render(f"High Score: {high_scores['top_score']} by {high_scores['player']}", True, settings.WHITE)
@@ -369,14 +369,14 @@ def draw_hud(screen, font, score, high_scores, bird, control_display_timer, curr
         draw_text(f"Ability: {active_ability}", font, settings.CYAN, 10, 170, screen)
     draw_text(f"Velocity: {bird.velocity:.2f}", font, settings.WHITE, 10, 210, screen)
     if pygame.time.get_ticks() - control_display_timer < settings.CONTROL_DISPLAY_TIME:
-        draw_text("Space: Flap, S: Shield, L: Lightsaber, P: Pause", font, settings.WHITE, 10, settings.HEIGHT - 50, screen)
+        draw_text("Space: Flap, S: Shield, L: Laser, P: Pause", font, settings.WHITE, 10, settings.HEIGHT - 50, screen)
 
 def draw_text(text, font, color, x, y, screen):
     """Helper function to draw text on the screen."""
     text_surface = font.render(text, True, color)
     screen.blit(text_surface, (x, y))
 
-def update_leaderboard(score, high_scores):
+def update_leaderboard(screen, score, high_scores):
     """Updates the leaderboard with the current score."""
     if score > high_scores['top_score']:
         high_scores['top_score'] = score
@@ -437,11 +437,3 @@ def random_jedi_training(screen, bird):
             with bird_lock:
                 bird.velocity += settings.GRAVITY * 1.5
             logging.info("Jedi Training failed: Bird velocity increased.")
-
-def random_hyperspace_event(bird):
-    """Randomly triggers a hyperspace event."""
-    if random.randint(0, 99) < 5:  # 5% chance
-        new_x = random.randint(50, settings.WIDTH - 50)
-        new_y = random.randint(50, settings.HEIGHT - 50)
-        reset_bird_position(bird, new_x, new_y)
-        logging.info(f"Hyperspace jump: Bird teleported to ({new_x}, {new_y}).")

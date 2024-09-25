@@ -7,7 +7,7 @@ import pygame
 # Screen Settings
 # -------------------------------
 WIDTH = 1024  # Adjusted width for balanced resolution
-HEIGHT = 720  # Adjusted height for balanced resolution
+HEIGHT = 768  # Adjusted height for balanced resolution
 FULLSCREEN = False  # Disabled fullscreen for easier testing
 WINDOW_TITLE = "Starbird: Quantum Edition"
 FPS = 60  # Maintained for smooth gameplay

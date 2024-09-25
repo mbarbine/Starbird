@@ -111,10 +111,10 @@ Prepare for an epic adventure across the galaxy."""
 
     # Load sound effects
     sound_effects = {
-        'flap': load_sound('FLAP'),
-        'collision': load_sound('HIT'),
-        'shield': load_sound('SHIELD'),
-        'lightsaber': load_sound('LASER')
+        'flap': load_sound('flap.wav'),
+        'collision': load_sound('hit.wav'),
+        'shield': load_sound('shield.wav'),
+        'laser': load_sound('laser.wav')
     }
 
     # DEBUG: Print the loaded sound_effects keys
@@ -207,7 +207,7 @@ def update_leaderboard(screen, score, high_scores):
     """
     if score > high_scores['top_score']:
         high_scores['top_score'] = score
-        high_scores['player'] = get_player_name(screen)
+        high_scores['player'] = get_player_name()
         save_high_scores(high_scores)
         logging.info(f"New high score achieved: {score} by {high_scores['player']}")
 
