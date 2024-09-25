@@ -5,12 +5,16 @@ import numpy as np
 from modules.settings import *  # Import all necessary settings
 import logging
 import random
+from threading import Lock
 
 class Bird:
     """
     Represents the player's bird character in the game.
     Handles movement, rendering, and special abilities.
     """
+
+    # Lock for thread safety when modifying bird attributes
+    bird_lock = Lock()
 
     def __init__(self):
         """Initializes the bird with default properties."""
@@ -45,8 +49,8 @@ class Bird:
         # Abilities and power-ups
         self.shield_active = False
         self.shield_duration = 0
-        self.laser_cooldown = LASER_COOLDOWN_TIME
         self.lightsaber_active = False
+        self.lightsaber_duration = 0  # Added lightsaber_duration
         self.lightsaber_color = LASER_COLOR
         self.lightsaber_length = LIGHTSABER_LENGTH
         self.pulse_offset = 0  # Initialize pulse_offset for shield effect
@@ -63,76 +67,94 @@ class Bird:
         Updates the bird's position, velocity, and handles animations based on delta time.
         Should be called every frame.
         """
-        if not self.is_flapping:  # Apply gravity only when not flapping
-            self.velocity += self.acceleration * dt
+        with self.bird_lock:
+            if not self.is_flapping:  # Apply gravity only when not flapping
+                self.velocity += self.acceleration * dt
 
-        self.velocity *= self.air_resistance
-        self.velocity = max(min(self.velocity, self.max_velocity), self.min_velocity)
-        self.rect.y += self.velocity * dt
+            self.velocity *= self.air_resistance
+            self.velocity = max(min(self.velocity, self.max_velocity), self.min_velocity)
+            self.rect.y += self.velocity * dt
 
-        # Rotate bird based on velocity
-        self.rotation_angle = max(-BIRD_ROTATION_LIMIT, min(self.velocity * ROTATION_SCALING, BIRD_ROTATION_LIMIT))
-        rotated_image = pygame.transform.rotate(self.images[int(self.current_frame)], self.rotation_angle)
-        self.image = rotated_image
-        self.rect = self.image.get_rect(center=self.rect.center)
+            # Rotate bird based on velocity
+            self.rotation_angle = max(-BIRD_ROTATION_LIMIT, min(self.velocity * ROTATION_SCALING, BIRD_ROTATION_LIMIT))
+            rotated_image = pygame.transform.rotate(self.images[int(self.current_frame)], self.rotation_angle)
+            self.image = rotated_image
+            self.rect = self.image.get_rect(center=self.rect.center)
 
-        # Update animation frame based on animation speed
-        self.current_frame += self.animation_speed * dt
-        if self.current_frame >= len(self.images):
-            self.current_frame = 0
+            # Update animation frame based on animation speed
+            self.current_frame += self.animation_speed * dt
+            if self.current_frame >= len(self.images):
+                self.current_frame = 0
 
-        # Flap cooldown
-        if self.flap_cooldown > 0:
-            self.flap_cooldown -= 1
-            if self.flap_cooldown <= 0:
-                self.is_flapping = False
+            # Flap cooldown
+            if self.flap_cooldown > 0:
+                self.flap_cooldown -= 1
+                if self.flap_cooldown <= 0:
+                    self.is_flapping = False
 
-        # Update shield pulse effect
-        if self.shield_active:
-            self.pulse_offset += 2  # Adjust pulse speed as needed
+            # Update shield duration
+            if self.shield_active:
+                self.shield_duration -= dt * 1000  # Convert to milliseconds
+                if self.shield_duration <= 0:
+                    self.shield_active = False
+                    self.pulse_offset = 0  # Reset pulse offset when deactivating shield
+                    logging.info("Shield power-up expired.")
 
-        # Keep bird within screen bounds
-        self.rect.y = max(0, min(self.rect.y, HEIGHT - self.rect.height))  # Use HEIGHT instead of WINDOW_HEIGHT
-        if self.rect.y == 0:
-            self.velocity = max(self.velocity, 0)
-        elif self.rect.y == HEIGHT - self.rect.height:
-            self.velocity = 0
+            # Update lightsaber duration
+            if self.lightsaber_active:
+                self.lightsaber_duration -= dt * 1000  # Convert to milliseconds
+                if self.lightsaber_duration <= 0:
+                    self.deactivate_lightsaber()
+                    logging.info("Lightsaber power-up expired.")
+
+            # Update shield pulse effect
+            if self.shield_active:
+                self.pulse_offset += 2  # Adjust pulse speed as needed
+
+            # Keep bird within screen bounds
+            self.rect.y = max(0, min(self.rect.y, HEIGHT - self.rect.height))  # Use HEIGHT instead of WINDOW_HEIGHT
+            if self.rect.y == 0:
+                self.velocity = max(self.velocity, 0)
+            elif self.rect.y == HEIGHT - self.rect.height:
+                self.velocity = 0
 
     def flap(self):
         """
         Makes the bird flap, giving it an upward velocity boost.
         """
-        if self.flap_cooldown <= 0:
-            self.velocity = FLAP_STRENGTH
-            self.is_flapping = True
-            self.flap_cooldown = self.flap_cooldown_time
-            logging.debug("Bird flapped.")
+        with self.bird_lock:
+            if self.flap_cooldown <= 0:
+                self.velocity = FLAP_STRENGTH
+                self.is_flapping = True
+                self.flap_cooldown = self.flap_cooldown_time
+                logging.debug("Bird flapped.")
 
     def draw(self, screen):
         """
         Draws the bird on the screen.
         If the shield or lightsaber is active, draws them as well.
         """
-        if self.shield_active:
-            pulse_color = (
-                self.color[0],
-                (self.color[1] + self.pulse_offset) % 255,
-                (self.color[2] + self.pulse_offset) % 255
-            )
-        else:
-            pulse_color = self.color
+        with self.bird_lock:
+            if self.shield_active:
+                pulse_color = (
+                    self.color[0],
+                    (self.color[1] + self.pulse_offset) % 255,
+                    (self.color[2] + self.pulse_offset) % 255
+                )
+            else:
+                pulse_color = self.color
 
-        tinted_image = self.image.copy()
-        tinted_image.fill(pulse_color, special_flags=pygame.BLEND_MULT)
-        screen.blit(tinted_image, self.rect)
+            tinted_image = self.image.copy()
+            tinted_image.fill(pulse_color, special_flags=pygame.BLEND_MULT)
+            screen.blit(tinted_image, self.rect)
 
-        # Draw shield
-        if self.shield_active:
-            self.draw_shield(screen)
+            # Draw shield
+            if self.shield_active:
+                self.draw_shield(screen)
 
-        # Draw lightsaber
-        if self.lightsaber_active:
-            self.draw_lightsaber(screen)
+            # Draw lightsaber
+            if self.lightsaber_active:
+                self.draw_lightsaber(screen)
 
     def draw_shield(self, screen):
         """
@@ -160,6 +182,7 @@ class Bird:
     def activate_lightsaber(self):
         """Activates the bird's lightsaber."""
         self.lightsaber_active = True
+        self.lightsaber_duration = LIGHTSABER_DURATION  # Set duration
         logging.info("Lightsaber activated.")
 
     def deactivate_lightsaber(self):
@@ -174,36 +197,41 @@ class Bird:
         Args:
             power_up_type (str): The type of power-up to apply.
         """
-        if power_up_type == "shrink":
-            new_width = int(self.rect.width * SHRINK_SCALE)
-            new_height = int(self.rect.height * SHRINK_SCALE)
-            self.rect.inflate_ip(-self.rect.width * (1 - SHRINK_SCALE), -self.rect.height * (1 - SHRINK_SCALE))
-            self.image = pygame.transform.scale(self.image, (new_width, new_height))
-            logging.info("Shrink power-up applied.")
-        elif power_up_type == "shield":
-            self.shield_active = True
-            self.shield_duration = SHIELD_DURATION
-            self.pulse_offset = 0  # Reset pulse offset when activating shield
-            logging.info("Shield power-up applied.")
-        elif power_up_type == "slowdown":
-            self.air_resistance = SLOWDOWN_AIR_RESISTANCE
-            logging.info("Slowdown power-up applied.")
-        elif power_up_type == "score":
-            logging.info("Score power-up applied.")
-        elif power_up_type == "lightsaber":
-            self.activate_lightsaber()
-            logging.info("Lightsaber power-up applied.")
+        with self.bird_lock:
+            if power_up_type == "shrink":
+                new_width = int(self.rect.width * SHRINK_SCALE)
+                new_height = int(self.rect.height * SHRINK_SCALE)
+                self.rect.inflate_ip(-self.rect.width * (1 - SHRINK_SCALE), -self.rect.height * (1 - SHRINK_SCALE))
+                self.image = pygame.transform.scale(self.image, (new_width, new_height))
+                logging.info("Shrink power-up applied.")
+            elif power_up_type == "shield":
+                self.shield_active = True
+                self.shield_duration = SHIELD_DURATION
+                self.pulse_offset = 0  # Reset pulse offset when activating shield
+                logging.info("Shield power-up applied.")
+            elif power_up_type == "slowdown":
+                self.air_resistance = SLOWDOWN_AIR_RESISTANCE
+                self.slowdown_duration = SLOWDOWN_DURATION  # Assuming SLOWDOWN_DURATION is defined in settings.py
+                logging.info("Slowdown power-up applied.")
+            elif power_up_type == "score":
+                # Implement score power-up logic here
+                logging.info("Score power-up applied.")
+            elif power_up_type == "lightsaber":
+                self.activate_lightsaber()
+                logging.info("Lightsaber power-up applied.")
 
     def reset_power_ups(self):
         """Resets all power-up effects."""
-        self.air_resistance = AIR_RESISTANCE
-        self.shield_active = False
-        self.shield_duration = 0
-        self.pulse_offset = 0  # Reset pulse offset when deactivating shield
-        self.lightsaber_active = False
-        self.rect.size = (BIRD_WIDTH, BIRD_HEIGHT)
-        self.image = pygame.transform.scale(self.image, (BIRD_WIDTH, BIRD_HEIGHT))
-        logging.info("All power-ups reset.")
+        with self.bird_lock:
+            self.air_resistance = AIR_RESISTANCE
+            self.shield_active = False
+            self.shield_duration = 0
+            self.pulse_offset = 0  # Reset pulse offset when deactivating shield
+            self.lightsaber_active = False
+            self.lightsaber_duration = 0
+            self.rect.size = (BIRD_WIDTH, BIRD_HEIGHT)
+            self.image = pygame.transform.scale(self.image, (BIRD_WIDTH, BIRD_HEIGHT))
+            logging.info("All power-ups reset.")
 
     def handle_quantum_superposition(self):
         """Handles the bird's behavior while in a superposition state."""

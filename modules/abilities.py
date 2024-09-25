@@ -82,3 +82,48 @@ def quantum_event_task(bird, quantum_element):
 #     """
 #     # Implement speed boost logic
 #     pass
+# abilities.py
+import logging
+
+class Abilities:
+    def __init__(self, bird):
+        self.bird = bird
+
+    def apply_power_up(self, power_up_type):
+        if power_up_type == "shield":
+            self.bird.activate_shield()
+        elif power_up_type == "lightsaber":
+            self.bird.activate_lightsaber()
+        elif power_up_type == "shrink":
+            self.bird.shrink()
+        else:
+            logging.warning(f"Unknown power-up type: {power_up_type}")
+
+    def reset_abilities(self):
+        self.bird.deactivate_all()
+# abilities.py
+import logging
+
+class Abilities:
+    def __init__(self, bird):
+        self.bird = bird
+
+    def apply_power_up(self, power_up_type):
+        """
+        Applies a specific power-up to the bird.
+
+        Args:
+            power_up_type (str): The type of power-up to apply.
+        """
+        if power_up_type == "shield":
+            self.bird.activate_shield()
+        elif power_up_type == "lightsaber":
+            self.bird.activate_lightsaber()
+        elif power_up_type == "shrink":
+            self.bird.shrink()
+        else:
+            logging.warning(f"Unknown power-up type: {power_up_type}")
+
+    def reset_abilities(self):
+        """Resets all abilities to their default state."""
+        self.bird.deactivate_all()

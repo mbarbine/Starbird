@@ -1,4 +1,3 @@
-# main.py
 
 import pygame
 import sys
@@ -26,12 +25,12 @@ from modules.level_loader import (
 from modules.story import star_wars_intro
 from modules.text_effects import draw_text
 from modules.backgrounds import ScrollingBackground
-from modules.quantum_flap import apply_quantum_flap
+from modules.quantum_flap import apply_quantum_flap, random_quantum_flap
 from modules.sound_utils import (
     load_sound,
     play_background_music
 )
-from modules.event_handler import handle_events
+from modules.event_handler import handle_events, handle_game_mechanics
 from modules.screen_utils import draw_hud, start_screen, game_over_screen, pause_game
 from modules.collisions import check_collisions, handle_collision
 from modules.game_utils import (
@@ -61,7 +60,7 @@ def main():
     clock = pygame.time.Clock()
 
     # Start playing background music
-    play_background_music()  # No argument needed
+    play_background_music()
 
     # Initialize scrolling background
     background = ScrollingBackground()
@@ -111,7 +110,7 @@ Prepare for an epic adventure across the galaxy."""
 
     # Load sound effects
     sound_effects = {
-        'flap': load_sound('FLAP'),  # Fix key to match lowercase usage in handle_events
+        'flap': load_sound('FLAP'),
         'collision': load_sound('HIT'),
         'shield': load_sound('SHIELD'),
         'lightsaber': load_sound('LASER')
@@ -136,6 +135,7 @@ Prepare for an epic adventure across the galaxy."""
     # Main game loop
     while running:
         dt = clock.tick(settings.FPS) / 1000  # Delta time in seconds
+        current_time = pygame.time.get_ticks() / 1000  # Current game time in seconds
 
         # Update background
         background.update(dt)
@@ -147,10 +147,8 @@ Prepare for an epic adventure across the galaxy."""
         # Update bird
         bird.update_with_dt(dt)
 
-        # Handle quantum events
-        if quantum_elements:
-            for quantum_element in quantum_elements.copy():
-                executor.submit(apply_quantum_flap, bird, quantum_element)
+        # Handle quantum events safely
+        handle_game_mechanics(screen, bird, obstacles, quantum_elements, event_timers, current_time)
 
         # Quantum Elements Spawning Logic
         if len(quantum_elements) < 1 and random.random() < QUANTUM_PROBABILITY:

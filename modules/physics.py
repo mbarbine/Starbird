@@ -1,5 +1,7 @@
 import numpy as np
 import ctypes
+import os
+
 
 # Load the optimized CUDA physics library
 cuda_lib = ctypes.CDLL('./optimized_physics.so')

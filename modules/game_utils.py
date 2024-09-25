@@ -18,12 +18,15 @@ bird_lock = Lock()
 def init_game_window():
     """Initializes the game window."""
     try:
-        screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT),
-                                          pygame.FULLSCREEN if settings.FULLSCREEN else 0)
+        screen = pygame.display.set_mode(
+            (settings.WIDTH, settings.HEIGHT),
+            pygame.FULLSCREEN if settings.FULLSCREEN else 0
+        )
         logging.info("Game window initialized successfully.")
     except pygame.error as e:
         logging.error(f"Error initializing game window: {e}")
         screen = pygame.display.set_mode((800, 600))  # Fallback resolution
+        logging.info("Fallback game window initialized at 800x600.")
     pygame.display.set_caption(settings.WINDOW_TITLE)
     return screen
 
@@ -39,18 +42,18 @@ def load_game_font():
 
 def load_sound(sound_path):
     """Loads a sound from the given path."""
-    full_path = os.path.join('assets', sound_path)
+    full_path = os.path.join('assets', 'sounds', sound_path)
     try:
         sound = pygame.mixer.Sound(full_path)
         logging.info(f"Loaded sound: {full_path}")
         return sound
     except pygame.error as e:
         logging.error(f"Failed to load sound {full_path}: {e}")
-        return pygame.mixer.Sound(None)  # Return a silent sound
+        return None  # Return None to indicate failure
 
-def play_background_music(music_path):
+def play_background_music(music_path='background_music.wav'):
     """Plays background music."""
-    full_path = os.path.join('assets', music_path)
+    full_path = os.path.join('assets', 'sounds', music_path)
     if os.path.exists(full_path):
         try:
             pygame.mixer.music.load(full_path)
@@ -65,7 +68,7 @@ def play_background_music(music_path):
 def save_high_scores(high_scores):
     """Saves the high scores to a file."""
     try:
-        with open(settings.HIGH_SCORE_FILE, 'w') as f:
+        with open(os.path.join('assets', 'highscore.txt'), 'w') as f:
             f.write(f"{high_scores['player']}:{high_scores['top_score']}\n")
         logging.info("High scores saved successfully.")
     except IOError as e:
@@ -75,7 +78,7 @@ def load_high_scores():
     """Loads the high scores from a file."""
     high_scores = {'player': 'None', 'top_score': 0}
     try:
-        with open(settings.HIGH_SCORE_FILE, 'r') as f:
+        with open(os.path.join('assets', 'highscore.txt'), 'r') as f:
             line = f.readline().strip()
             if line:
                 player, score = line.split(':')
@@ -193,6 +196,70 @@ def pause_game(screen, font):
                     logging.info("Resume key pressed. Resuming game.")
                     paused = False
 
+def update_event_timers(event_timers, current_time):
+    """
+    Updates the event timers based on the current time.
+
+    Args:
+        event_timers (dict): Dictionary of event timers.
+        current_time (float): The current game time in seconds.
+    """
+    for event in event_timers:
+        event_timers[event] -= current_time
+        if event_timers[event] < 0:
+            event_timers[event] = 0  # Prevent negative timers
+
+def check_event_timers(event_timers, event_name):
+    """
+    Checks if the event timer for a specific event has expired.
+
+    Args:
+        event_timers (dict): Dictionary of event timers.
+        event_name (str): The event to check.
+
+    Returns:
+        bool: True if the event timer has expired, False otherwise.
+    """
+    return event_timers.get(event_name, 0) <= 0
+
+def reset_bird_position(bird, new_x, new_y):
+    """
+    Resets the bird's position to a new location and stops its velocity.
+
+    Args:
+        bird (Bird): The bird object.
+        new_x (int): The new x-coordinate for the bird.
+        new_y (int): The new y-coordinate for the bird.
+    """
+    with bird_lock:
+        bird.rect.x = new_x
+        bird.rect.y = new_y
+        bird.velocity = 0
+    logging.info(f"Bird position reset to ({new_x}, {new_y}) and velocity set to 0.")
+
+def load_holocrons(num_holocrons):
+    """
+    Loads a specified number of holocrons into the game.
+
+    Args:
+        num_holocrons (int): The number of holocrons to load.
+
+    Returns:
+        list: A list of Holocron objects.
+    """
+    return [Holocron(random.randint(0, settings.WIDTH), random.randint(0, settings.HEIGHT)) for _ in range(num_holocrons)]
+
+def update_pipes(pipes, dt):
+    """
+    Updates the position of pipes.
+
+    Args:
+        pipes (list): List of Pipe objects.
+        dt (float): Delta time for frame consistency.
+    """
+    for pipe in pipes:
+        pipe.update(dt)
+
 def update_obstacles_with_dt(level_config, obstacles, score, current_level, dt):
     """
     Updates the positions of all obstacles based on delta time.
@@ -205,7 +272,6 @@ def update_obstacles_with_dt(level_config, obstacles, score, current_level, dt):
         dt (float): Delta time to scale movement speed.
     """
     for obstacle in obstacles:
-        # Ensure that the obstacle has an 'update' method
         if hasattr(obstacle, 'update'):
             obstacle.update(dt)  # Pass 'dt' to the 'update' method
         else:
@@ -277,17 +343,20 @@ def check_collisions(bird, obstacles, quantum_elements):
 
 def handle_collision(bird, collision_sound):
     """Handles the collision event."""
-    bird.is_flapping = False
-    bird.velocity = 0
-    if hasattr(bird, 'lives') and bird.lives > 0:
-        bird.lives -= 1
-        logging.info(f"Handled collision: Bird lost a life. Lives remaining: {bird.lives}")
-        collision_sound.play()
-        if bird.lives <= 0:
-            logging.info("No lives remaining. Game Over.")
-    else:
-        logging.info("No lives remaining.")
-        collision_sound.play()
+    with bird_lock:
+        bird.is_flapping = False
+        bird.velocity = 0
+        if hasattr(bird, 'lives') and bird.lives > 0:
+            bird.lives -= 1
+            logging.info(f"Handled collision: Bird lost a life. Lives remaining: {bird.lives}")
+            if collision_sound:
+                collision_sound.play()
+            if bird.lives <= 0:
+                logging.info("No lives remaining. Game Over.")
+        else:
+            logging.info("No lives remaining.")
+            if collision_sound:
+                collision_sound.play()
 
 def draw_hud(screen, font, score, high_scores, bird, control_display_timer, current_level):
     """Draws the Heads-Up Display (HUD) on the screen."""
@@ -338,6 +407,7 @@ def handle_level_progression(score, current_level, background, screen, obstacles
             background.load_new_background(new_background_path)
             logging.info(f"Background updated for level {current_level}.")
 
+        # Optionally, adjust game settings for higher levels
         settings.PIPE_SPEED += 0.5
         settings.PIPE_SPAWN_RATE_FRAMES = max(60, settings.PIPE_SPAWN_RATE_FRAMES - 20)
 
@@ -347,7 +417,7 @@ def handle_level_progression(score, current_level, background, screen, obstacles
 
 def random_dark_side_event(obstacles, bird, screen):
     """Randomly triggers a Dark Side event."""
-    if random.randint(0, 99) < 2:
+    if random.randint(0, 99) < 2:  # 2% chance
         if dark_side_choice(screen):
             for obstacle in obstacles:
                 obstacle.speed += 1
@@ -358,7 +428,7 @@ def random_dark_side_event(obstacles, bird, screen):
 
 def random_jedi_training(screen, bird):
     """Randomly triggers a Jedi Training event."""
-    if random.randint(0, 99) < 5:
+    if random.randint(0, 99) < 5:  # 5% chance
         success = jedi_training(screen)
         if success:
             bird.apply_power_up("shield")
@@ -370,11 +440,8 @@ def random_jedi_training(screen, bird):
 
 def random_hyperspace_event(bird):
     """Randomly triggers a hyperspace event."""
-    if random.randint(0, 99) < 5:
+    if random.randint(0, 99) < 5:  # 5% chance
         new_x = random.randint(50, settings.WIDTH - 50)
         new_y = random.randint(50, settings.HEIGHT - 50)
-        bird.rect.x = new_x
-        bird.rect.y = new_y
-        with bird_lock:
-            bird.velocity = 0
+        reset_bird_position(bird, new_x, new_y)
         logging.info(f"Hyperspace jump: Bird teleported to ({new_x}, {new_y}).")
